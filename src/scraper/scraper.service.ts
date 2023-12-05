@@ -1,39 +1,48 @@
 import { Injectable } from '@nestjs/common';
 import { chromium } from 'playwright'
-
+import { sticker } from './has_stickers'
 
 @Injectable()
 export class ScraperService {
-    async scraper(itemURI: string){
+
+    async scraper(param: string){
+        const link = "https://buff.163.com/goods/" + param
         const browser = await chromium.launch();
         const page = await browser.newPage();
-        await page.goto(itemURI);
-    
-        const items = await page.$$eval(".selling", item => {
-            const data: any[] = []
-            item.forEach(itemDetails => {
-                let details1 = itemDetails.dataset.assetInfo
-                let details2 = itemDetails.dataset.goodsInfo
-                let details3 = itemDetails.dataset.orderInfo
-                let details4 = itemDetails.dataset.dataSeller
-                if(details1 && details2 && details3 && details4){
-                    details1 = JSON.parse(details1)
-                    details2 = JSON.parse(details2)
-                    details3 = JSON.parse(details3)
-                    details4 = JSON.parse(details4)
-                }
-                if(details2 && details2.hasOwnProperty("market_hash_name"))
-                data.push({
-                    details1: details1,
-                    details2: details2["market_hash_name"],
-                    detials3: details3,
-                    details4: details4
+        await page.goto(link);
+
+        const items = await page.$$eval('tr.selling', allItems => {
+            const elem: any[] = []
+            allItems.forEach(item => {
+                const assetInfo = item.dataset.assetInfo
+                const goodsInfo = item.dataset.goodsInfo
+                const orderInfo = item.dataset.orderInfo
+                const seller = item.dataset.seller
+                
+                const assetInfoJson = JSON.parse(assetInfo)
+                const goodsInfoJson = JSON.parse(goodsInfo)
+                const orderInfoJson = JSON.parse(orderInfo)
+                const sellerJson = JSON.parse(seller)
+                
+                const stickers = sticker(assetInfo)
+
+                elem.push({
+                    id: assetInfoJson["assetid"],
+                    name: goodsInfoJson["market_hash_name"],
+                    steam_price: goodsInfoJson["steam_price"],
+                    stickers: stickers,
+                    buff163_price: orderInfoJson["price"],
+                    lowest_price: orderInfoJson["lowest_bargain_price"],
+                    seller_id: sellerJson["user_id"],
+                    has_cooldown: assetInfoJson["has_tradable_cooldown"],
+                    paintwear: assetInfoJson["paintwear"],
                 })
-            return data
             })
+            return elem
         })
-    
+
         await browser.close()
         console.log(items)
+        return items
     }
 }
