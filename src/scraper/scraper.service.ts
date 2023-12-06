@@ -3,11 +3,19 @@ import { chromium } from 'playwright'
 
 @Injectable()
 export class ScraperService {
-    async scraper(param: string){
-        const link = "https://buff.163.com/goods/" + param
+    async scraper(itemCode: string, pageNum: string){
+        const link = `https://buff.163.com/goods/${itemCode}#page_num=${pageNum}`
         const browser = await chromium.launch();
         const page = await browser.newPage();
         await page.goto(link);
+        await page.waitForTimeout(5000);
+        
+        await page.screenshot({ path: `sc1_${itemCode}_${pageNum}.png` })
+        page.on('popup', async popup => {
+            await page.locator('a.popup-close').click()
+            await popup.waitForLoadState();
+        });
+        await page.screenshot({ path: `sc2_${itemCode}_${pageNum}.png` })
 
         const items = await page.$$eval('tr.selling', allItems => {
             const elem: any[] = []
@@ -36,9 +44,10 @@ export class ScraperService {
                     id: assetInfoJson["assetid"],
                     name: goodsInfoJson["market_hash_name"],
                     steam_price: "USD " + goodsInfoJson["steam_price"],
-                    buff163_price: "CNY " + orderInfoJson["price"],
+                    buff163_price: "CNY " + orderInfoJson["price"],  
                     lowest_price: "CNY " + orderInfoJson["lowest_bargain_price"],
-                    stickers: stickers["stickers"],
+                    number_of_stickers: stickers.stickers.length,
+                    stickers: stickers.stickers,
                     seller_id: sellerJson["user_id"],
                     has_cooldown: assetInfoJson["has_tradable_cooldown"],
                     paintwear: assetInfoJson["paintwear"],

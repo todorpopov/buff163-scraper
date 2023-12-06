@@ -5,14 +5,8 @@ import { ScraperService } from './scraper.service';
 export class ScraperController {
     constructor(private readonly scraperService: ScraperService) {}
 
-    @Get("/asd")
-    async scrape(){
-        return this.scraperService.scraper("35286#page_num=1")
-    }
-
-    @Get(':link')
-    async scrapeLink(@Param('link') link: string) {
-        // console.log(link)
-        return this.scraperService.scraper(link)
+    @Get(':itemCode/:pageNum')
+    async scrapeLink(@Param('itemCode') itemCode: string, @Param('pageNum') pageNum: string) {
+        return this.scraperService.scraper(itemCode, pageNum)
     }
 }
