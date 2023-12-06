@@ -8,14 +8,15 @@ export class ScraperService {
         const browser = await chromium.launch();
         const page = await browser.newPage();
         await page.goto(link);
-        await page.waitForTimeout(5000);
+
+        // await page.waitForTimeout(5000);
         
-        await page.screenshot({ path: `sc1_${itemCode}_${pageNum}.png` })
-        page.on('popup', async popup => {
-            await page.locator('a.popup-close').click()
-            await popup.waitForLoadState();
-        });
-        await page.screenshot({ path: `sc2_${itemCode}_${pageNum}.png` })
+        // await page.screenshot({ path: `sc1_${itemCode}_${pageNum}.png` })
+        // page.on('popup', async popup => {
+        //     await page.locator('a.popup-close').click()
+        //     await popup.waitForLoadState();
+        // });
+        // await page.screenshot({ path: `sc2_${itemCode}_${pageNum}.png` })
 
         const items = await page.$$eval('tr.selling', allItems => {
             const elem: any[] = []
