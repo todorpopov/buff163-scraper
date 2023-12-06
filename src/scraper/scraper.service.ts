@@ -58,7 +58,18 @@ export class ScraperService {
         })
 
         await browser.close()
-        console.log(items)
         return items
+    }
+
+    async scrapeMultiple(){
+        const itemCodes = ['45462', '756142', '44946', '757522', '857690', '857611', '857610', '857716', '857609', '857703', '857609']
+        let itemsDetails = []
+        for(let i = 0; i < itemCodes.length; i++){
+            itemsDetails.push(await this.scraper(itemCodes[i], '1'))
+        }
+        console.log(itemsDetails)
+        console.log(`Number of item pages: ${itemCodes.length}`)
+        console.log(`Total number of items: ${itemsDetails.flat().length}`)
+        return itemsDetails
     }
 }

@@ -9,4 +9,9 @@ export class ScraperController {
     async scrapeLink(@Param('itemCode') itemCode: string, @Param('pageNum') pageNum: string) {
         return this.scraperService.scraper(itemCode, pageNum)
     }
+
+    @Get("all")
+    async scrapeAll(){
+        return this.scraperService.scrapeMultiple()
+    }
 }
