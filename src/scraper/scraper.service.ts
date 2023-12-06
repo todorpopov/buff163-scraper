@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { chromium } from 'playwright'
-import { sticker } from './has_stickers'
 
 @Injectable()
 export class ScraperService {
-
     async scraper(param: string){
         const link = "https://buff.163.com/goods/" + param
         const browser = await chromium.launch();
@@ -24,15 +22,23 @@ export class ScraperService {
                 const orderInfoJson = JSON.parse(orderInfo)
                 const sellerJson = JSON.parse(seller)
                 
-                const stickers = sticker(assetInfo)
+                let stickers: any
+                const startIndex = assetInfo.indexOf("stickers")
+                if(startIndex === -1){ 
+                    stickers = []
+                } else{
+                    const endIndex = assetInfo.indexOf(']', startIndex)
+                    const result = '{"' + assetInfo.slice(startIndex, endIndex + 1) + "}"
+                    stickers = JSON.parse(result)
+                }
 
                 elem.push({
                     id: assetInfoJson["assetid"],
                     name: goodsInfoJson["market_hash_name"],
-                    steam_price: goodsInfoJson["steam_price"],
-                    stickers: stickers,
-                    buff163_price: orderInfoJson["price"],
-                    lowest_price: orderInfoJson["lowest_bargain_price"],
+                    steam_price: "USD " + goodsInfoJson["steam_price"],
+                    buff163_price: "CNY " + orderInfoJson["price"],
+                    lowest_price: "CNY " + orderInfoJson["lowest_bargain_price"],
+                    stickers: stickers["stickers"],
                     seller_id: sellerJson["user_id"],
                     has_cooldown: assetInfoJson["has_tradable_cooldown"],
                     paintwear: assetInfoJson["paintwear"],
