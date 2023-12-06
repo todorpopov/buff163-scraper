@@ -1,0 +1,5 @@
+- Get prices for all the stickers an item has
+- ???Trying to ommit the login popup (there is 
+captcha and mobile code authentication, not sure if possible)
+-
+-
