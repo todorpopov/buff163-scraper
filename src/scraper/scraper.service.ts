@@ -41,14 +41,24 @@ export class ScraperService {
                     stickers = JSON.parse(result)
                 }
 
+                const stickersArr = []
+                for(const sticker of stickers.stickers){
+                    stickersArr.push({
+                        name: sticker.name,
+                        slot: sticker.slot,
+                        id: sticker.sticker_id,
+                        wear: sticker.wear
+                    })
+                }
+
                 elem.push({
                     id: assetInfoJson["assetid"],
                     name: goodsInfoJson["market_hash_name"],
                     steam_price: "USD " + goodsInfoJson["steam_price"],
                     buff163_price: "CNY " + orderInfoJson["price"],  
                     lowest_price: "CNY " + orderInfoJson["lowest_bargain_price"],
-                    number_of_stickers: stickers.stickers.length,
-                    stickers: stickers.stickers,
+                    number_of_stickers: stickersArr.length,
+                    stickers: stickersArr,
                     seller_id: sellerJson["user_id"],
                     has_cooldown: assetInfoJson["has_tradable_cooldown"],
                     paintwear: assetInfoJson["paintwear"],
@@ -58,6 +68,7 @@ export class ScraperService {
         })
 
         await browser.close()
+        console.log(items)
         return items
     }
 
@@ -72,4 +83,31 @@ export class ScraperService {
         console.log(`Total number of items: ${itemsDetails.flat().length}`)
         return itemsDetails
     }
+
+    async stickers(itemCode: string, pageNum: string){
+        const link = `https://buff.163.com/goods/${itemCode}#page_num=${pageNum}`
+        const browser = await chromium.launch();
+        const page = await browser.newPage();
+        await page.goto(link);
+
+        const items = await page.$$eval('a.i_Btn.i_Btn_mid2.btn-buy-order ', allItems => {
+            const elem: any[] = []
+            allItems.forEach(item => {
+                const details = item.dataset.assetInfo
+                elem.push(details)
+            })
+            return elem
+        })
+        await browser.close()
+        const stickers = JSON.parse(items[0])
+        console.log(stickers.info.stickers)
+        return stickers.info.stickers
+    }
 }
+
+// {"stickers":[
+// {"name":"oskar | 2017年克拉科夫锦标赛","slot":0,"sticker_id":2277,"wear":0.1243385598063469},
+// {"name":"oskar | 2017年克拉科夫锦标赛","slot":1,"sticker_id":2277,"wear":0},
+// {"name":"rain | 2017年亚特兰大锦标赛","slot":2,"sticker_id":1907,"wear":0.7746378183364868},
+// {"name":"oskar | 2017年克拉科夫锦标赛","slot":3,"sticker_id":2277,"wear":0.11178454011678696}
+// ]}

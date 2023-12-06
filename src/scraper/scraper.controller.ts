@@ -14,4 +14,10 @@ export class ScraperController {
     async scrapeAll(){
         return this.scraperService.scrapeMultiple()
     }
+
+    @Get('stickers/:itemCode/:pageNum')
+    async getStickers(@Param('itemCode') itemCode: string, @Param('pageNum') pageNum: string) {
+        return this.scraperService.stickers(itemCode, pageNum)
+    }
+
 }
