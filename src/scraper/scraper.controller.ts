@@ -5,19 +5,24 @@ import { ScraperService } from './scraper.service';
 export class ScraperController {
     constructor(private readonly scraperService: ScraperService) {}
 
-    @Get(':itemCode/:pageNum')
-    async scrapeLink(@Param('itemCode') itemCode: string, @Param('pageNum') pageNum: string) {
-        return this.scraperService.scraper(itemCode, pageNum)
+    @Get('item/:itemCode')
+    async scrapeLink(@Param('itemCode') itemCode: string) {
+        return this.scraperService.scrapeItemDetails(itemCode)
     }
 
-    @Get("all")
+    
+    @Get('stickers/:itemCode')
+    async getStickers(@Param('itemCode') itemCode: string) {
+        return this.scraperService.scrapeStickersPrices(itemCode)
+    }
+
+    @Get("combined/:itemCode")
+    async scrapeCombine(@Param('itemCode') itemCode: string){
+        return this.scraperService.combine(itemCode)
+    }
+    
+    @Get("")
     async scrapeAll(){
         return this.scraperService.scrapeMultiple()
     }
-
-    @Get('stickers/:itemCode/:pageNum')
-    async getStickers(@Param('itemCode') itemCode: string, @Param('pageNum') pageNum: string) {
-        return this.scraperService.stickers(itemCode, pageNum)
-    }
-
 }

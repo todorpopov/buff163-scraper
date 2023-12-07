@@ -1,37 +1,37 @@
 import { Injectable } from '@nestjs/common';
 import { chromium } from 'playwright'
+import { parseStickersPrices, parseStickersString } from './external_functions';
 
 @Injectable()
 export class ScraperService {
-    async scraper(itemCode: string, pageNum: string){
-        const link = `https://buff.163.com/goods/${itemCode}#page_num=${pageNum}`
+    async scrapeItemDetails(itemCode: string){
+        const link = `https://buff.163.com/goods/${itemCode}#page_num=1`
         const browser = await chromium.launch();
         const page = await browser.newPage();
         await page.goto(link);
 
-        // await page.waitForTimeout(5000);
-        
-        // await page.screenshot({ path: `sc1_${itemCode}_${pageNum}.png` })
-        // page.on('popup', async popup => {
-        //     await page.locator('a.popup-close').click()
-        //     await popup.waitForLoadState();
-        // });
-        // await page.screenshot({ path: `sc2_${itemCode}_${pageNum}.png` })
+        // const stickersPrices = []
+        // await this.scrapeStickersPrices(itemCode).then(item => {
+        //     stickersPrices.push(item)
+        // })
 
+        // console.log(stickersPrices[0])
+        
         const items = await page.$$eval('tr.selling', allItems => {
             const elem: any[] = []
-            allItems.forEach(item => {
+            allItems.forEach(async (item) => {
+
                 const assetInfo = item.dataset.assetInfo
                 const goodsInfo = item.dataset.goodsInfo
                 const orderInfo = item.dataset.orderInfo
-                const seller = item.dataset.seller
+                const sellerInfo = item.dataset.seller
                 
                 const assetInfoJson = JSON.parse(assetInfo)
                 const goodsInfoJson = JSON.parse(goodsInfo)
                 const orderInfoJson = JSON.parse(orderInfo)
-                const sellerJson = JSON.parse(seller)
+                const sellerInfoJson = JSON.parse(sellerInfo)
                 
-                let stickers: any
+                let stickers
                 const startIndex = assetInfo.indexOf("stickers")
                 if(startIndex === -1){ 
                     stickers = []
@@ -40,14 +40,15 @@ export class ScraperService {
                     const result = '{"' + assetInfo.slice(startIndex, endIndex + 1) + "}"
                     stickers = JSON.parse(result)
                 }
-
+    
                 const stickersArr = []
-                for(const sticker of stickers.stickers){
+                for(let i = 0; i < stickers.stickers.length; i++){
                     stickersArr.push({
-                        name: sticker.name,
-                        slot: sticker.slot,
-                        id: sticker.sticker_id,
-                        wear: sticker.wear
+                        name: stickers.stickers.length.name,
+                        slot: stickers.stickers.length.slot,
+                        id: stickers.stickers.length.sticker_id,
+                        wear: stickers.stickers.length.wear,
+                        //price: stickersPrices[i][index]
                     })
                 }
 
@@ -59,55 +60,70 @@ export class ScraperService {
                     lowest_price: "CNY " + orderInfoJson["lowest_bargain_price"],
                     number_of_stickers: stickersArr.length,
                     stickers: stickersArr,
-                    seller_id: sellerJson["user_id"],
+                    // stickers: parseStickersString(assetInfo),
+                    seller_id: sellerInfoJson["user_id"],
                     has_cooldown: assetInfoJson["has_tradable_cooldown"],
                     paintwear: assetInfoJson["paintwear"],
                 })
             })
             return elem
         })
+        
+        // const stickersPrices = await this.stickersPrices(itemCode)
+        // console.log(stickersPrices)
 
         await browser.close()
-        console.log(items)
+        // console.log(items)
         return items
+    }
+
+    
+    async scrapeStickersPrices(itemCode: string){
+        const link = `https://buff.163.com/goods/${itemCode}#page_num=1`
+        const browser = await chromium.launch();
+        const page = await browser.newPage();
+        await page.goto(link);
+        
+        let stickers = []
+        const table = await page.locator('td.img_td').elementHandles();
+        for (let i = 0; i < table.length; i++) {
+            await table[i].hover();
+            await page.waitForTimeout(1500);
+            const stickerPrices = await page.locator('//div[@class = "sticker-wrapper"]').allInnerTexts()
+            const itemStickers = parseStickersPrices(stickerPrices)
+            stickers.push(itemStickers)
+        }
+        
+        await browser.close()
+        return(stickers)
+    }
+    
+    async combine(itemCode: string){
+        const items = await this.scrapeItemDetails(itemCode)
+        const stickerPrices = await this.scrapeStickersPrices(itemCode)
+        //console.log(stickerPrices)
+
+        for(let i = 0; i < items.length; i++) {
+            if(items[i].number_of_stickers === 0) continue
+
+            for(let j = 0; j < stickerPrices.length; j++) {
+                console.log(items[i].sticker[j].price)
+                console.log(stickerPrices[j])       
+            }
+        }
+
+        return stickerPrices
     }
 
     async scrapeMultiple(){
         const itemCodes = ['45462', '756142', '44946', '757522', '857690', '857611', '857610', '857716', '857609', '857703', '857609']
         let itemsDetails = []
         for(let i = 0; i < itemCodes.length; i++){
-            itemsDetails.push(await this.scraper(itemCodes[i], '1'))
+            itemsDetails.push(await this.scrapeItemDetails(itemCodes[i]))
         }
         console.log(itemsDetails)
         console.log(`Number of item pages: ${itemCodes.length}`)
         console.log(`Total number of items: ${itemsDetails.flat().length}`)
         return itemsDetails
     }
-
-    async stickers(itemCode: string, pageNum: string){
-        const link = `https://buff.163.com/goods/${itemCode}#page_num=${pageNum}`
-        const browser = await chromium.launch();
-        const page = await browser.newPage();
-        await page.goto(link);
-
-        const items = await page.$$eval('a.i_Btn.i_Btn_mid2.btn-buy-order ', allItems => {
-            const elem: any[] = []
-            allItems.forEach(item => {
-                const details = item.dataset.assetInfo
-                elem.push(details)
-            })
-            return elem
-        })
-        await browser.close()
-        const stickers = JSON.parse(items[0])
-        console.log(stickers.info.stickers)
-        return stickers.info.stickers
-    }
 }
-
-// {"stickers":[
-// {"name":"oskar | 2017年克拉科夫锦标赛","slot":0,"sticker_id":2277,"wear":0.1243385598063469},
-// {"name":"oskar | 2017年克拉科夫锦标赛","slot":1,"sticker_id":2277,"wear":0},
-// {"name":"rain | 2017年亚特兰大锦标赛","slot":2,"sticker_id":1907,"wear":0.7746378183364868},
-// {"name":"oskar | 2017年克拉科夫锦标赛","slot":3,"sticker_id":2277,"wear":0.11178454011678696}
-// ]}
