@@ -6,8 +6,8 @@ export class ScraperController {
     constructor(private readonly scraperService: ScraperService) {}
 
     @Get('item/:itemCode')
-    async scrapeLink(@Param('itemCode') itemCode: string) {
-        return this.scraperService.scrapeItemDetails(itemCode)
+    async scrapeItems(@Param('itemCode') itemCode: string) {
+        return this.scraperService.scrapeItemsDetails(itemCode)
     }
 
     
@@ -16,13 +16,13 @@ export class ScraperController {
         return this.scraperService.scrapeStickersPrices(itemCode)
     }
 
-    @Get("combined/:itemCode")
-    async scrapeCombine(@Param('itemCode') itemCode: string){
-        return this.scraperService.combine(itemCode)
+    @Get("all_details/:itemCode")
+    async scrapeAllDetails(@Param('itemCode') itemCode: string){
+        return this.scraperService.scrapeAllDetails(itemCode)
     }
     
     @Get("")
-    async scrapeAll(){
-        return this.scraperService.scrapeMultiple()
+    async scrapeMultiplePages(){
+        return this.scraperService.scrapeMultiplePages()
     }
 }
