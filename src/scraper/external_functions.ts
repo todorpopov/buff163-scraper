@@ -14,6 +14,3 @@ export function parseStickersPrices(stickersArray: string[]) {
 
     return itemStickers
 }
-
-// " \n炽炎天使（闪亮）\n印花磨损: 100%   (¥ 4.5)
-//

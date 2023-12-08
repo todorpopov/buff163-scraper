@@ -6,12 +6,12 @@ import { parseStickersPrices } from './external_functions';
 export class ScraperService {
     async scrapeItemsDetails(itemCode: string){
         const link = `https://buff.163.com/goods/${itemCode}#page_num=1`
-        const browser = await chromium.launch();
-        const page = await browser.newPage();
-        await page.goto(link);
+        const browser = await chromium.launch()
+        const page = await browser.newPage()
+        await page.goto(link)
         
         const items = await page.$$eval('tr.selling', allItems => {
-            const elem: any[] = []
+            const itemsArray: any[] = []
             allItems.forEach(async (item) => {
 
                 const assetInfo = item.dataset.assetInfo
@@ -31,8 +31,9 @@ export class ScraperService {
                     delete sticker.category
                 }
 
-                elem.push({
+                itemsArray.push({
                     id: assetInfoJson.assetid,
+                    order_id: orderInfoJson.id,
                     name: goodsInfoJson.market_hash_name,
                     steam_price: "USD " + goodsInfoJson.steam_price,
                     buff163_price: "CNY " + orderInfoJson.price,  
@@ -40,36 +41,40 @@ export class ScraperService {
                     number_of_stickers: stickers.length,
                     stickers: stickers,
                     seller_id: sellerInfoJson.user_id,
+                    seller_profile_link: `https://buff.163.com/shop/${sellerInfoJson.user_id}#tab=selling&game=csgo&page_num=1&search=${goodsInfoJson.market_hash_name.replaceAll(' ', '%20')}`,
                     has_cooldown: assetInfoJson.has_tradable_cooldown,
                     paintwear: assetInfoJson.paintwear,
                 })
             })
-            return elem
+            return itemsArray
         })
 
         await browser.close()
+        console.log(items[0])
         return items
     }
 
-    
     async scrapeStickersPrices(itemCode: string){
         const link = `https://buff.163.com/goods/${itemCode}#page_num=1`
-        const browser = await chromium.launch();
-        const page = await browser.newPage();
-        await page.goto(link);
+        const browser = await chromium.launch()
+        const page = await browser.newPage()
+        await page.goto(link)
         
         let stickers = []
-        const table = await page.locator('td.img_td').elementHandles();
+        const table = await page.locator('td.img_td').elementHandles()
         for (let i = 0; i < table.length; i++) {
-            await table[i].hover();
-            await page.waitForTimeout(1000);
-            const stickerPrices = await page.locator('//div[@class = "sticker-wrapper"]').allInnerTexts()
-            const itemStickers = parseStickersPrices(stickerPrices)
-            stickers.push(itemStickers)
+            await table[i].hover()
+            // await page.waitForTimeout(1000)
+            await page.waitForSelector('//div[@class = "floattip"]').then( async () => {
+                const stickerPrices = await page.locator('//div[@class = "sticker-name"]').allInnerTexts()
+                const itemStickers = parseStickersPrices(stickerPrices)
+                stickers.push(itemStickers)
+            }).catch(() => {
+                stickers.push("!!!Could not find!!!")
+            });
         }
-        
-        await browser.close()
         console.log(stickers)
+        await browser.close()
         return(stickers)
     }
     
@@ -91,17 +96,18 @@ export class ScraperService {
                 items[i].stickers[j].price = stickerPrices[i][j]
             }
         }
-        console.log(items[0])
+        // console.log(items)
+        // console.log(items[0])
         return items
     }
 
     async scrapeMultiplePages(){
-        const itemCodes = ['45462', '756142', '44946', '757522', '857690', '857611', '857610', '857716', '857609', '857703', '857609']
+        const itemCodes = ['44946', '44946', '44946', '44946', '44946']
         let itemsDetails = []
         for(let i = 0; i < itemCodes.length; i++){
             itemsDetails.push(await this.scrapeAllDetails(itemCodes[i]))
         }
-        console.log(itemsDetails)
+
         console.log(`Number of item pages: ${itemCodes.length}`)
         console.log(`Total number of items: ${itemsDetails.flat().length}`)
         return itemsDetails
