@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>App</title>
+  </head>
+  <body>
+    <div>
+      {{#each items}}
+        <div>
+          <ul>
+            <li>ID: {{this.id}}</li>
+            <li>Name: {{this.name}}</li>   
+            <li>Steam Price: USD {{this.steam_price_usd}}</li>
+            <li>Buff163 Price: CNY {{this.buff163_price_cny}}</li>
+            <li>Lowest Price: CNY {{this.lowest_price_cny}}</li>
+            <li>Number of Stickers: {{this.number_of_stickers}}</li>
+            <li>Stickers: 
+              {{#each this.stickers}}
+                <div>
+                  <ul>
+                    <li>Sticker ID: {{this.sticker_id}}</li>
+                    <li>Sticker Name: {{this.name}}</li>
+                    <li>Sticker Price: CNY {{this.price}}</li>
+                    <li>Sticker Slot: {{this.slot}}</li> 
+                    <li>Sticker Wear: {{this.wear}}</li>
+                  </ul>
+                </div>
+              {{/each}}
+            </li>
+            <li>Seller ID: {{this.seller_id}}</li>
+            <li>Search Link: <a href="{{this.seller_profile_link}}" target="_blank">link</a></li>
+            <li>Cooldown: {{this.has_cooldown}}</li>
+            <li>Paintwear: {{this.paintwear}}</li>   
+          </ul>
+        </div>
+      {{/each}}
+    </div>
+  </body>
+</html>

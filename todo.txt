@@ -1,4 +1,0 @@
-- clean the code a bit(see why one of the imported functions breaks everything) - done
-- combine prices with item stickers - done
-- change variable names
--

@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Render } from '@nestjs/common';
 import { ScraperService } from './scraper.service';
 
 @Controller('scraper')
@@ -9,20 +9,24 @@ export class ScraperController {
     async scrapeItems(@Param('itemCode') itemCode: string) {
         return this.scraperService.scrapeItemsDetails(itemCode)
     }
-
+    
     
     @Get('stickers/:itemCode')
     async getStickers(@Param('itemCode') itemCode: string) {
         return this.scraperService.scrapeStickersPrices(itemCode)
     }
-
-    @Get("all_details/:itemCode")
+    
+    @Get("all/:itemCode")
+    @Render('details_template')
     async scrapeAllDetails(@Param('itemCode') itemCode: string){
-        return this.scraperService.scrapeAllDetails(itemCode)
+        const itemsList = await this.scraperService.scrapeAllDetails(itemCode)
+        return { items: itemsList }
     }
     
     @Get("")
+    @Render('details_template')
     async scrapeMultiplePages(){
-        return this.scraperService.scrapeMultiplePages()
+        const itemsList = await this.scraperService.scrapeMultiplePages()
+        return { items: itemsList }
     }
 }
