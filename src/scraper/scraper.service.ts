@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { chromium } from 'playwright'
-import { parseStickersPrices, randomTime } from './external_functions';
+import { parseStickersPrices, getRandomItemCodes } from './external_functions';
 
 @Injectable()
 export class ScraperService {
@@ -52,7 +52,7 @@ export class ScraperService {
 
         await browser.close()
         const end = performance.now()
-        //console.log(`Scraping all of the details took ${end - start}ms`)
+        console.log(`Scraping all of the details took ${end - start}ms`)
         return items
     }
 
@@ -84,10 +84,9 @@ export class ScraperService {
             //     stickers.push(-1)
             // });
         }
-        console.log(stickers)
         await browser.close()
         const end = performance.now()
-        //console.log(`Scraping all of the stickers took ${end - start}ms`)
+        console.log(`Scraping all of the stickers took ${end - start}ms`)
         return(stickers)
     }
     
@@ -117,15 +116,28 @@ export class ScraperService {
     
     async scrapeMultiplePages(){
         const start = performance.now()
-        const itemCodes = ['44946', '44946', '44946', '44946', '44946', '44946', '44946', '44946', '44946', '44946']
+        const itemCodes = getRandomItemCodes(10)
+        
         let itemsDetails = []
         for(let i = 0; i < itemCodes.length; i++){
             itemsDetails.push(await this.scrapeAllDetails(itemCodes[i]))
         }
-
+        
         const end = performance.now()
         console.log(itemsDetails.length)
         console.log(`Scraping 10 item pages (44946) ${end - start}ms`)
         return itemsDetails.flat()
+    }
+
+    async getOnlyItemsWithStickers() {
+        const items = await this.scrapeMultiplePages()
+        const itemsWithStickers = []
+        items.forEach(item => {
+            if(item.number_of_stickers !== 0){
+                itemsWithStickers.push(item)
+            }
+        })
+
+        return itemsWithStickers
     }
 }

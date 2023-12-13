@@ -1,3 +1,7 @@
+import * as path from 'path'
+import * as fs from 'fs'
+import { log } from 'console'
+
 export function parseStickersPrices(stickersArray: string[]) {
     const itemStickers = []
     for(let i = 0; i < stickersArray.length; i++){
@@ -15,8 +19,41 @@ export function parseStickersPrices(stickersArray: string[]) {
     return itemStickers
 }
 
-export function randomTime(min: number, max: number): number {
+export function randomNumber(min: number, max: number): number {
     min = Math.ceil(min)
     max = Math.floor(max)
     return Math.floor(Math.random() * (max - min) + min)
-  }
+}
+
+export function parseFile(): any[]{
+    const filePath = path.join(process.cwd(), './src/scraper/item_ids/ids.txt')
+
+    const fileContent = []
+    try {
+        const data = fs.readFileSync(filePath, 'utf8')
+        const splitLines = data.split('\n')
+        for(let i = 0; i < splitLines.length; i++) {
+            const splitLine = splitLines[i].split(';')
+            fileContent.push({
+                code: splitLine[0],
+                item_name: splitLine[1]
+            })
+        }
+    } catch (err) {
+        console.error(err);
+    }
+    return fileContent
+}
+
+export function getRandomItemCodes(numOfItems: number){
+    const fileContent = parseFile()
+
+    const itemCodesArray = []
+    for(let i = 0; i < numOfItems; i++){
+        const randLine = randomNumber(0, fileContent.length)
+        const randItemCode = fileContent[randLine].code
+        itemCodesArray.push(randItemCode)
+    }
+
+    return itemCodesArray
+}
