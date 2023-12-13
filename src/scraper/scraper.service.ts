@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { chromium } from 'playwright'
 import { parseStickersPrices, getRandomItemCodes } from './external_functions';
+import { Observable} from 'rxjs';
 
 @Injectable()
 export class ScraperService {
     async scrapeItemsDetails(itemCode: string){
-        const start = performance.now()
         const link = `https://buff.163.com/goods/${itemCode}#page_num=1`
         const browser = await chromium.launch()
         const page = await browser.newPage()
@@ -51,13 +51,10 @@ export class ScraperService {
         })
 
         await browser.close()
-        const end = performance.now()
-        console.log(`Scraping all of the details took ${end - start}ms`)
         return items
     }
 
     async scrapeStickersPrices(itemCode: string){
-        const start = performance.now()
         const link = `https://buff.163.com/goods/${itemCode}#page_num=1`
         const browser = await chromium.launch()
         const page = await browser.newPage()
@@ -85,8 +82,6 @@ export class ScraperService {
             // });
         }
         await browser.close()
-        const end = performance.now()
-        console.log(`Scraping all of the stickers took ${end - start}ms`)
         return(stickers)
     }
     
@@ -110,7 +105,7 @@ export class ScraperService {
             }
         }
         const end = performance.now()
-        console.log(`Scraping both took ${end - start}ms`)
+        console.log(`Scraping details and prices took ${end - start}ms`)
         return items
     }
     
@@ -139,5 +134,22 @@ export class ScraperService {
         })
 
         return itemsWithStickers
+    }
+
+    async getDataSse() {
+        const randcode = getRandomItemCodes(1)[0]
+        const items = await this.scrapeItemsDetails(randcode)
+        console.log(randcode)
+        // const itemsWithStickers = []
+        // items.forEach(item => {
+            //     if(item.number_of_stickers !== 0){
+                //         itemsWithStickers.push(item)
+                //     }
+                // })
+        
+        const observable = new Observable(observer => {
+            observer.next({ data: items })
+        })
+        return observable
     }
 }

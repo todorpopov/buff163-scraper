@@ -1,6 +1,12 @@
-import { Controller, Get, Param, Render } from '@nestjs/common';
+import { Controller, Get, Next, Param, Render, Sse } from '@nestjs/common';
 import { ScraperService } from './scraper.service';
 import { Cron } from '@nestjs/schedule';
+import { Observable, interval, map } from 'rxjs';
+import { subscribe } from 'diagnostics_channel';
+
+interface Data {
+    data: any[]
+}
 
 @Controller('scraper')
 export class ScraperController {
@@ -10,7 +16,6 @@ export class ScraperController {
     async scrapeItems(@Param('itemCode') itemCode: string) {
         return this.scraperService.scrapeItemsDetails(itemCode)
     }
-    
     
     @Get('stickers/:itemCode')
     async getStickers(@Param('itemCode') itemCode: string) {
@@ -24,7 +29,6 @@ export class ScraperController {
         return { items: itemsList }
     }
     
-    //@Cron("*/5 * * * *") // Run every 5 minutes
     @Get("")
     @Render('details_template')
     async scrapeMultiplePages(){
@@ -32,11 +36,23 @@ export class ScraperController {
         return { items: itemsList }
     }
 
-    @Cron("*/5 * * * *") // Run every 5 minutes
     @Get("only_with_stickers")
     @Render('details_template')
     async getOnlyItemsWithStickers(){
         const itemsList = await this.scraperService.getOnlyItemsWithStickers()
         return { items: itemsList }
+    }
+
+    // @Cron("*/5 * * * *")
+    @Cron("*/30 * * * * *")
+    @Sse("server_sent")
+    async getDataSse(): Promise<Observable<any>>{
+        // const items = this.scraperService.getDataSse()
+        // return items
+        const data = await this.scraperService.getDataSse().then(obs => {
+            obs.subscribe()
+            return obs
+        })
+        return data
     }
 }
