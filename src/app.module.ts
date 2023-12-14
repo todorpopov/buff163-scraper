@@ -5,16 +5,14 @@ import { ScraperModule } from './scraper/scraper.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
     ScraperModule, 
     ScheduleModule.forRoot(), 
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'views')
+      rootPath: join(__dirname, '..', 'src/static'),
     }),
-    EventEmitterModule.forRoot()
   ],
   controllers: [AppController],
   providers: [AppService],

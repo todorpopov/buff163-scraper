@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <script>
+            const eventSource = new EventSource('server_sent_data');
+            console.log("Connected")
+            eventSource.onmessage = ({ data }) => {
+                const newData = document.createElement('li')
+                newData.innerText = data
+                document.body.appendChild(newData)
+            }
+        </script>
+    </body>
+</html>

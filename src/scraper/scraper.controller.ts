@@ -1,12 +1,7 @@
-import { Controller, Get, Next, Param, Render, Sse } from '@nestjs/common';
+import { Controller, Get, Param, Render, Sse } from '@nestjs/common';
 import { ScraperService } from './scraper.service';
 import { Cron } from '@nestjs/schedule';
-import { Observable, interval, map } from 'rxjs';
-import { subscribe } from 'diagnostics_channel';
-
-interface Data {
-    data: any[]
-}
+import { Observable} from 'rxjs';
 
 @Controller('scraper')
 export class ScraperController {
@@ -43,16 +38,8 @@ export class ScraperController {
         return { items: itemsList }
     }
 
-    // @Cron("*/5 * * * *")
-    @Cron("*/30 * * * * *")
-    @Sse("server_sent")
-    async getDataSse(): Promise<Observable<any>>{
-        // const items = this.scraperService.getDataSse()
-        // return items
-        const data = await this.scraperService.getDataSse().then(obs => {
-            obs.subscribe()
-            return obs
-        })
-        return data
+    @Sse("server_sent_data")
+    getDataSse(): Observable<any>{
+        return this.scraperService.itemEvents
     }
 }

@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { chromium } from 'playwright'
 import { parseStickersPrices, getRandomItemCodes } from './external_functions';
-import { Observable} from 'rxjs';
+import { Observable, map} from 'rxjs';
+import { Cron, Timeout } from '@nestjs/schedule';
+
+const NUMBER_OF_ITEM_CODES = 10
 
 @Injectable()
 export class ScraperService {
@@ -111,7 +114,7 @@ export class ScraperService {
     
     async scrapeMultiplePages(){
         const start = performance.now()
-        const itemCodes = getRandomItemCodes(10)
+        const itemCodes = getRandomItemCodes(NUMBER_OF_ITEM_CODES)
         
         let itemsDetails = []
         for(let i = 0; i < itemCodes.length; i++){
@@ -136,20 +139,16 @@ export class ScraperService {
         return itemsWithStickers
     }
 
+    itemEvents = new Observable((subscriber) => {
+        subscriber.next(0)
+    })
+
+    @Cron("*/30 * * * * *")
     async getDataSse() {
         const randcode = getRandomItemCodes(1)[0]
         const items = await this.scrapeItemsDetails(randcode)
-        console.log(randcode)
-        // const itemsWithStickers = []
-        // items.forEach(item => {
-            //     if(item.number_of_stickers !== 0){
-                //         itemsWithStickers.push(item)
-                //     }
-                // })
-        
-        const observable = new Observable(observer => {
-            observer.next({ data: items })
-        })
-        return observable
+        console.log(`Random code: ${randcode}`)
+
+        this.itemEvents.pipe(map(() => ({ data: items }))).subscribe((value) => console.log(value))
     }
 }
