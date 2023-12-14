@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { chromium } from 'playwright'
 import { parseStickersPrices, getRandomItemCodes } from './external_functions';
-import { Observable, map} from 'rxjs';
+import { Observable, map, of} from 'rxjs';
 import { Cron, Timeout } from '@nestjs/schedule';
+import { subscribe } from 'diagnostics_channel';
 
 const NUMBER_OF_ITEM_CODES = 10
 
@@ -139,9 +140,7 @@ export class ScraperService {
         return itemsWithStickers
     }
 
-    itemEvents = new Observable((subscriber) => {
-        subscriber.next(0)
-    })
+    itemEventsObservable: Observable<any> = new Observable()
 
     @Cron("*/30 * * * * *")
     async getDataSse() {
@@ -149,6 +148,7 @@ export class ScraperService {
         const items = await this.scrapeItemsDetails(randcode)
         console.log(`Random code: ${randcode}`)
 
-        this.itemEvents.pipe(map(() => ({ data: items }))).subscribe((value) => console.log(value))
+        this.itemEventsObservable = of(items)
+        this.itemEventsObservable.forEach((x) => console.log(x))
     }
 }

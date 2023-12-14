@@ -2,9 +2,10 @@
 <html>
     <body>
         <script>
-            const eventSource = new EventSource('server_sent_data');
+            const eventSource = new EventSource('http://localhost:3000/scraper/stream');
             console.log("Connected")
-            eventSource.onmessage = ({ data }) => {
+            eventSource.onmessage = (data) => {
+                console.log('New data')
                 const newData = document.createElement('li')
                 newData.innerText = data
                 document.body.appendChild(newData)

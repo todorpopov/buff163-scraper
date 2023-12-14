@@ -38,8 +38,8 @@ export class ScraperController {
         return { items: itemsList }
     }
 
-    @Sse("server_sent_data")
+    @Sse("stream")
     getDataSse(): Observable<any>{
-        return this.scraperService.itemEvents
+        return this.scraperService.itemEventsObservable
     }
 }
