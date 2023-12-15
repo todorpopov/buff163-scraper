@@ -58,6 +58,8 @@ export class ScraperService {
     }
 
     async scrapeStickersPrices(itemCode: string){
+        const start = performance.now()
+
         const link = `https://buff.163.com/goods/${itemCode}#page_num=1`
         const browser = await chromium.launch()
         const page = await browser.newPage()
@@ -67,9 +69,6 @@ export class ScraperService {
         const table = await page.locator('td.img_td').elementHandles()
         for (let i = 0; i < table.length; i++) {
             await table[i].hover()
-
-            // const wait = randomTime(200, 600)
-            // console.log(wait)
 
             await page.waitForTimeout(1000)
             const stickerPrices = await page.locator('//div[@class = "sticker-name"]').allInnerTexts()
@@ -85,11 +84,14 @@ export class ScraperService {
             // });
         }
         await browser.close()
+        const end = performance.now()
+        console.log(`Scraping the stickers took: ${end - start} ms`)
         return(stickers)
     }
     
     async scrapeAllDetails(itemCode: string){
         const start = performance.now()
+
         const items = await this.scrapeItemsDetails(itemCode)
         const stickerPrices = await this.scrapeStickersPrices(itemCode)
         
@@ -107,13 +109,14 @@ export class ScraperService {
                 items[i].stickers[j].price = stickerPrices[i][j]
             }
         }
+
         const end = performance.now()
-        console.log(`Scraping details and prices took ${end - start}ms`)
+        console.log(`Combined took: ${end - start} ms`)
+
         return items
     }
     
     async scrapeMultiplePages(){
-        const start = performance.now()
         const itemCodes = getRandomItemCodes(NUMBER_OF_ITEM_CODES)
         
         let itemsDetails = []
@@ -121,9 +124,6 @@ export class ScraperService {
             itemsDetails.push(await this.scrapeAllDetails(itemCodes[i]))
         }
         
-        const end = performance.now()
-        console.log(itemsDetails.length)
-        console.log(`Scraping 10 item pages (44946) ${end - start}ms`)
         return itemsDetails.flat()
     }
 
@@ -141,7 +141,7 @@ export class ScraperService {
 
     itemsSubject = new ReplaySubject()
     
-    @Cron("*/5 * * * *")
+    @Cron("*/10 * * * *")
     async getDataSse() {
         const items = await this.getOnlyItemsWithStickers()
         this.itemsSubject.next({data: items})
