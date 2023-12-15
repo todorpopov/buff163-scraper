@@ -7,7 +7,7 @@
             eventSource.onmessage = (data) => {
                 console.log('New data')
                 const newData = document.createElement('li')
-                newData.innerText = data
+                newData.innerText = data.data
                 document.body.appendChild(newData)
             }
         </script>

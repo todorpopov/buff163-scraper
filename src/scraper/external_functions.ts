@@ -1,6 +1,5 @@
 import * as path from 'path'
 import * as fs from 'fs'
-import { log } from 'console'
 
 export function parseStickersPrices(stickersArray: string[]) {
     const itemStickers = []
