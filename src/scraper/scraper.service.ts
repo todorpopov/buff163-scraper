@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { chromium } from 'playwright'
 import { parseStickersPrices, getRandomItemCodes } from './external_functions';
-import { Observable, combineLatest, concat, first, forkJoin, map, of, tap, scan, BehaviorSubject, Subject} from 'rxjs';
-import { Cron, Timeout } from '@nestjs/schedule';
-import { subscribe } from 'diagnostics_channel';
+import { ReplaySubject } from 'rxjs';
+import { Cron } from '@nestjs/schedule';
 
 const NUMBER_OF_ITEM_CODES = 10
 
@@ -140,14 +139,11 @@ export class ScraperService {
         return itemsWithStickers
     }
 
-    itemsSubject = new Subject()
+    itemsSubject = new ReplaySubject()
     
-    @Cron("*/30 * * * * *")
+    @Cron("*/5 * * * *")
     async getDataSse() {
-        const randcode = getRandomItemCodes(1)[0]
-        const items = await this.scrapeItemsDetails(randcode)
-        console.log(`Random code: ${randcode}`)
-
+        const items = await this.getOnlyItemsWithStickers()
         this.itemsSubject.next({data: items})
     }
 }

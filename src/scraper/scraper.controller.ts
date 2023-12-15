@@ -1,7 +1,6 @@
 import { Controller, Get, Param, Render, Sse } from '@nestjs/common';
 import { ScraperService } from './scraper.service';
-import { Cron } from '@nestjs/schedule';
-import { Observable, tap, of} from 'rxjs';
+import { Observable } from 'rxjs';
 
 @Controller('scraper')
 export class ScraperController {
