@@ -1,7 +1,8 @@
 import { Controller, Get, Param, Render, Sse, UseGuards } from '@nestjs/common';
 import { ScraperService } from './scraper.service';
-import { Observable } from 'rxjs';
+import { Observable, filter, map, of } from 'rxjs';
 import { AuthGuard } from '../auth/auth.guard';
+import { stickerPriceFilter } from './external_functions';
 
 @Controller('scraper')
 export class ScraperController {
@@ -35,7 +36,7 @@ export class ScraperController {
         return { items: itemsList }
     }
 
-    @UseGuards(AuthGuard)
+    //@UseGuards(AuthGuard)
     @Get("only_with_stickers")
     @Render('details_template')
     async getOnlyItemsWithStickers(){
@@ -43,9 +44,9 @@ export class ScraperController {
         return { items: itemsList }
     }
 
-    @UseGuards(AuthGuard)
+    //@UseGuards(AuthGuard)
     @Sse("stream")
     getDataSse(): Observable<any>{
-        return this.scraperService.itemsSubject
+        return this.scraperService.itemsSubject.pipe(filter(item => stickerPriceFilter(item['data'], 200)))
     }
 }

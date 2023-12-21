@@ -56,3 +56,18 @@ export function getRandomItemCodes(numOfItems: number){
 
     return itemCodesArray
 }
+
+export function stickerPriceFilter(itemObject, targetPercantage = 100): boolean {
+    const itemPrice = itemObject.buff163_price_cny
+    let stickersTotal = 0
+
+    itemObject.stickers.forEach(sticker => {
+        stickersTotal += sticker.price
+    })
+    
+    const targetPrice = itemPrice * (targetPercantage / 100)
+    if (stickersTotal >= targetPrice){
+        return true
+    }
+    return false
+}
