@@ -51,7 +51,9 @@ export function getRandomItemCodes(numOfItems: number){
     for(let i = 0; i < numOfItems; i++){
         const randLine = randomNumber(0, fileContent.length)
         const randItemCode = fileContent[randLine].code
-        itemCodesArray.push(randItemCode)
+        if(!itemCodesArray.includes(randItemCode)){
+            itemCodesArray.push(randItemCode)
+        }
     }
 
     return itemCodesArray
@@ -67,7 +69,18 @@ export function stickerPriceFilter(itemObject, targetPercantage = 100): boolean 
     
     const targetPrice = itemPrice * (targetPercantage / 100)
     if (stickersTotal >= targetPrice){
+        console.log("---New Item Found---")
         return true
     }
     return false
+}
+
+export function parseItemName(name: string): string {
+    let returnName = name
+
+    if(name.includes('StatTrak')){
+        returnName = name.slice(11)
+    }
+
+    return returnName
 }

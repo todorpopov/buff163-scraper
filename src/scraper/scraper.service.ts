@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { chromium } from 'playwright'
-import { parseStickersPrices, getRandomItemCodes } from './external_functions';
-import { ReplaySubject, filter } from 'rxjs';
+import { parseStickersPrices, getRandomItemCodes, parseItemName } from './external_functions';
+import { ReplaySubject } from 'rxjs';
 import { Cron } from '@nestjs/schedule';
 
-const NUMBER_OF_ITEM_CODES = 10
+const NUMBER_OF_ITEM_CODES = 1
 
 @Injectable()
 export class ScraperService {
@@ -32,6 +32,7 @@ export class ScraperService {
                 const orderInfoJson = JSON.parse(orderInfo)
                 const sellerInfoJson = JSON.parse(sellerInfo)
                 
+                const itemName = parseItemName(goodsInfoJson.market_hash_name)
                 const stickers = assetInfoJson.info.stickers
 
                 for(let sticker of stickers){
@@ -42,14 +43,14 @@ export class ScraperService {
                 itemsArray.push({
                     id: assetInfoJson.assetid,
                     order_id: orderInfoJson.id,
-                    name: goodsInfoJson.market_hash_name,
+                    name: itemName,
                     steam_price_usd: Number(goodsInfoJson.steam_price),
                     buff163_price_cny: Number(orderInfoJson.price),  
                     lowest_price_cny: Number(orderInfoJson.lowest_bargain_price),
                     number_of_stickers: stickers.length,
                     stickers: stickers,
                     seller_id: sellerInfoJson.user_id,
-                    seller_profile_link: `https://buff.163.com/shop/${sellerInfoJson.user_id}#tab=selling&game=csgo&page_num=1&search=${goodsInfoJson.market_hash_name.replaceAll(' ', '%20')}`,
+                    seller_profile_link: `https://buff.163.com/shop/${sellerInfoJson.user_id}#tab=selling&game=csgo&page_num=1&search=${itemName.replaceAll(' ', '%20')}`,
                     has_cooldown: assetInfoJson.has_tradable_cooldown,
                     paintwear: assetInfoJson.paintwear,
                 })
@@ -161,7 +162,7 @@ export class ScraperService {
 
     itemsSubject = new ReplaySubject()
     
-    @Cron("*/5 * * * *")
+    @Cron("*/1 * * * *")
     async getDataSse() {
         const start = performance.now()
 

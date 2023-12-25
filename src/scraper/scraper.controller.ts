@@ -44,9 +44,9 @@ export class ScraperController {
         return { items: itemsList }
     }
 
-    //@UseGuards(AuthGuard)
+    // @UseGuards(AuthGuard)
     @Sse("stream")
     getDataSse(): Observable<any>{
-        return this.scraperService.itemsSubject.pipe(filter(item => stickerPriceFilter(item['data'], 200)))
+        return this.scraperService.itemsSubject.pipe(filter(item => stickerPriceFilter(item['data'], 50)))
     }
 }
