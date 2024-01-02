@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { chromium } from 'playwright'
-import { parseStickersPrices, getRandomItemCodes, parseItemName } from './external_functions';
+import { parseStickersPrices, getRandomItemCodes } from './external_functions';
 import { ReplaySubject } from 'rxjs';
 import { Cron } from '@nestjs/schedule';
 
-const NUMBER_OF_ITEM_CODES = 1
+const NUMBER_OF_ITEM_CODES = 10
 
 @Injectable()
 export class ScraperService {
@@ -17,12 +17,11 @@ export class ScraperService {
         const browser = await chromium.launch()
         const page = await browser.newPage()
         await page.goto(link)
-        
+
         const items = await page.$$eval('tr.selling', allItems => {
-            const itemsArray = []
+            const itemsArray = [];
             allItems.forEach(async (item) => {
                 console.log('asd')
-
                 const assetInfo = item.dataset.assetInfo
                 const goodsInfo = item.dataset.goodsInfo
                 const orderInfo = item.dataset.orderInfo
@@ -34,6 +33,10 @@ export class ScraperService {
                 const sellerInfoJson = JSON.parse(sellerInfo)
                 
                 let itemName = goodsInfoJson.market_hash_name
+                if(itemName.includes('StatTrak')){
+                    itemName = itemName.slice(11)
+                }
+
                 const stickers = assetInfoJson.info.stickers
 
                 for(let sticker of stickers){
@@ -57,7 +60,7 @@ export class ScraperService {
                 })
             })
             return itemsArray
-        })
+        }) || []
 
         await browser.close()
 
@@ -147,7 +150,7 @@ export class ScraperService {
         const start = performance.now()
 
         const items = await this.scrapeMultiplePages()
-        const itemsWithStickers = []
+        const itemsWithStickers = [];
         items.forEach(item => {
             if(item.number_of_stickers !== 0){
                 itemsWithStickers.push(item)
@@ -162,11 +165,11 @@ export class ScraperService {
 
     itemsSubject = new ReplaySubject()
     
-    @Cron("*/1 * * * *")
+    @Cron("*/5 * * * *")
     async getDataSse() {
         const start = performance.now()
 
-        const items = await this.getOnlyItemsWithStickers()
+        const items = await this.getOnlyItemsWithStickers();
         items.forEach(item => this.itemsSubject.next({data: item}))
 
         const end = performance.now()

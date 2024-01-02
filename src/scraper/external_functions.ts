@@ -60,8 +60,8 @@ export function getRandomItemCodes(numOfItems: number){
 }
 
 export function stickerPriceFilter(itemObject, targetPercantage = 100): boolean {
-    const itemPrice = itemObject.buff163_price_cny
-    let stickersTotal = 0
+    const itemPrice = itemObject.buff163_price_cny;
+    let stickersTotal = 0;
 
     itemObject.stickers.forEach(sticker => {
         stickersTotal += sticker.price
@@ -73,14 +73,4 @@ export function stickerPriceFilter(itemObject, targetPercantage = 100): boolean 
         return true
     }
     return false
-}
-
-export function parseItemName(name: string): string {
-    let returnName = name
-
-    if(name.includes('StatTrak')){
-        returnName = name.slice(11)
-    }
-
-    return name
 }
