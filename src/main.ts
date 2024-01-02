@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { join } from 'path';
 
 async function bootstrap() {
@@ -11,6 +12,15 @@ async function bootstrap() {
   app.useStaticAssets(join(__dirname, '..', 'src/public'));
   app.setBaseViewsDir(join(__dirname, '..', 'src/views'));
   app.setViewEngine('hbs');
+
+  const config = new DocumentBuilder()
+    .setTitle('Buff163 Scraper')
+    .setDescription('A NestJS web application that scrapes CS:GO items')
+    .setVersion('1.0')
+    .addTag('scraper')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
 
   await app.listen(3000);
 }

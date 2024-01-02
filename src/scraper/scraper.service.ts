@@ -21,6 +21,7 @@ export class ScraperService {
         const items = await page.$$eval('tr.selling', allItems => {
             const itemsArray = []
             allItems.forEach(async (item) => {
+                console.log('asd')
 
                 const assetInfo = item.dataset.assetInfo
                 const goodsInfo = item.dataset.goodsInfo
@@ -32,7 +33,7 @@ export class ScraperService {
                 const orderInfoJson = JSON.parse(orderInfo)
                 const sellerInfoJson = JSON.parse(sellerInfo)
                 
-                const itemName = parseItemName(goodsInfoJson.market_hash_name)
+                let itemName = goodsInfoJson.market_hash_name
                 const stickers = assetInfoJson.info.stickers
 
                 for(let sticker of stickers){
@@ -62,7 +63,6 @@ export class ScraperService {
 
         const end = performance.now()
         console.log(`-----\n1. Details: ${((end - start) / 1000).toFixed(2)} s`)
-
         return items
     }
 

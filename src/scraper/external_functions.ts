@@ -69,7 +69,7 @@ export function stickerPriceFilter(itemObject, targetPercantage = 100): boolean 
     
     const targetPrice = itemPrice * (targetPercantage / 100)
     if (stickersTotal >= targetPrice){
-        console.log("---New Item Found---")
+        console.log("---Item Found---")
         return true
     }
     return false
@@ -82,5 +82,5 @@ export function parseItemName(name: string): string {
         returnName = name.slice(11)
     }
 
-    return returnName
+    return name
 }
