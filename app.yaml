@@ -2,7 +2,8 @@ runtime: nodejs18
 
 env_variables: 
   JWT_SECRET: A98DB973KWL8XP1LZ94KJF0
-  
+  PORT: 3000
+
 resources:
   cpu: 1
   memory_gb: 0.5
