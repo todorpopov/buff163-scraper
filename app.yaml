@@ -1,4 +1,4 @@
-runtime: nodejs18
+runtime: nodejs
 
 env_variables: 
   JWT_SECRET: A98DB973KWL8XP1LZ94KJF0
