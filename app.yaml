@@ -1,8 +1,11 @@
-runtime: nodejs18
+runtime: custom
+
+service: buff163-scraper
+
+env: flex
 
 env_variables: 
   JWT_SECRET: A98DB973KWL8XP1LZ94KJF0
-  PORT: 3000
 
 resources:
   cpu: 1
