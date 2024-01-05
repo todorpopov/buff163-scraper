@@ -43,7 +43,7 @@ export class ScraperController {
     }
 
     @ApiOperation({ summary: 'Scrapes multiple random item codes and returns only the ones with stickers' })
-    //@UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Get("only_with_stickers")
     @Render('details_template')
     async getOnlyItemsWithStickers(){
@@ -52,7 +52,7 @@ export class ScraperController {
     }
 
     @ApiOperation({ summary: 'An observable SSE stream that consists of only items with stickers that meet certain criteria. Gets populated with data over time, as the cron restarts the scraper every 5 min' })
-    // @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Sse("stream")
     getDataSse(): Observable<any>{
         return this.scraperService.itemsSubject.pipe(filter(item => stickerPriceFilter(item['data'], 1)))
