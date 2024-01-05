@@ -14,26 +14,25 @@ import { ConfigService } from '@nestjs/config';
   
     async canActivate(context: ExecutionContext): Promise<boolean> {
       const request = context.switchToHttp().getRequest();
-      const token = this.extractTokenFromHeader(request);
+      const token = await this.extractTokenFromCookies(request);
+      console.log("\n\nToken from cookies: " + token)
       if (!token) {
         throw new UnauthorizedException();
       }
       try {
-        const payload = await this.jwtService.verifyAsync(
-          token,
-          {
-            secret: this.configService.get<string>('JWT_SECRET')
-          }
-        );
-        request['user'] = payload;
+        const payload = await this.jwtService.verifyAsync(token)
+        request['user'] = payload
       } catch {
         throw new UnauthorizedException();
       }
       return true;
     }
   
-    private extractTokenFromHeader(request: Request): string | undefined {
-      const [type, token] = request.headers.authorization?.split(' ') ?? [];
-      return type === 'Bearer' ? token : undefined;
+    private async extractTokenFromCookies(request: Request): Promise<string> | undefined {
+      const token = request.cookies.token
+      if (token) {
+        return token;
+      }
+      return null;
     }
   }
