@@ -1,4 +1,4 @@
-import { Body, Res, Controller, Post, HttpCode, HttpStatus } from '@nestjs/common';
+import { Body, Res, Controller, Post, HttpCode, HttpStatus, Param } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express'
@@ -11,9 +11,19 @@ export class AuthController {
   @ApiOperation({ summary: 'Login endpoint. Username and password expected as a JSON in the body of the request.' })
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  signIn(@Body() signInDto: Record<string, any>, @Res({ passthrough: true }) response: Response) {
-    const token = this.authService.signIn(signInDto.username, signInDto.password)
-    response.cookie('jwt', token)
-    return token
+  async signIn(@Body() signInDto: Record<string, any>, @Res({ passthrough: true }) response: Response) {
+    const token = await this.authService.signIn(signInDto.username, signInDto.password)
+    response.cookie('token', token)
+    // console.log("\n\ntoken recieved at login endpoint: " + token)
+    return {msg: 'Logged in'}
   }
+
+  // @HttpCode(HttpStatus.OK)
+  // @Post('login')
+  // async testingEndpoint(@Res({ passthrough: true }) response: Response) {
+  //   const token = await this.authService.signIn("admin", "admin")
+  //   response.cookie('token', token)
+  //   console.log("\n\nSaved to cookies: " + token)
+  //   return {msg: 'Logged in'}
+  // }
 }
