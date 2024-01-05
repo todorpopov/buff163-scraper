@@ -1,7 +1,0 @@
-steps:
-- name: 'gcr.io/cloud-builders/docker'
-  args:
-    - 'build'
-    - '--tag=temp'
-    - '--file=Dockerfile'
-    - '.'

@@ -1,5 +1,5 @@
 runtime: custom
-#service: buff163-scraper
+service: buff163-scraper
 env: flex
 
 env_variables: 
