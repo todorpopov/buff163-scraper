@@ -15,7 +15,7 @@ import { ConfigService } from '@nestjs/config';
     async canActivate(context: ExecutionContext): Promise<boolean> {
       const request = context.switchToHttp().getRequest();
       const token = await this.extractTokenFromCookies(request);
-      console.log("\n\nToken from cookies: " + token)
+      console.log("\n\nToken taken from cookies: " + token)
       if (!token) {
         throw new UnauthorizedException();
       }

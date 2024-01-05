@@ -13,8 +13,8 @@ export class AuthController {
   @Post('login')
   async signIn(@Body() signInDto: Record<string, any>, @Res({ passthrough: true }) response: Response) {
     const token = await this.authService.signIn(signInDto.username, signInDto.password)
-    response.cookie('token', token)
-    // console.log("\n\ntoken recieved at login endpoint: " + token)
+    response.cookie('token', token, { maxAge: 60 * 60 * 1 })
+    console.log("\n\nToken saved to cookies: " + token)
     return {msg: 'Logged in'}
   }
 
