@@ -7,6 +7,6 @@ export class AppController {
 
     @Get("")
     homepage() {
-        return { msg: "A NestJS web application that scrapes Buf163, a major CS:GO marketplace" }
+        return { msg: "A NestJS web application that scrapes Buff163, a major CS:GO marketplace" }
     }
 }

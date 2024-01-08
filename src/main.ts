@@ -10,6 +10,11 @@ async function bootstrap() {
   //   AppModule,
   // );
   const app = await NestFactory.create(AppModule);
+  
+  app.enableCors({
+    origin: true
+  })
+
   app.use(cookieParser())
 
   // app.useStaticAssets(join(__dirname, '..', 'src/public'));
@@ -25,11 +30,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  // app.enableCors({
-  //   origin: [
-  //     "http://localhost:3000",
-  //   ]
-  // })
 
   await app.listen(process.env.PORT || 3000);
 }
