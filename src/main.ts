@@ -1,20 +1,20 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { NestExpressApplication } from '@nestjs/platform-express';
+// import { NestExpressApplication } from '@nestjs/platform-express';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { join } from 'path';
+// import { join } from 'path';
 import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(
-    AppModule,
-  );
-
+  // const app = await NestFactory.create<NestExpressApplication>(
+  //   AppModule,
+  // );
+  const app = await NestFactory.create(AppModule);
   app.use(cookieParser())
-  
-  app.useStaticAssets(join(__dirname, '..', 'src/public'));
-  app.setBaseViewsDir(join(__dirname, '..', 'src/views'));
-  app.setViewEngine('hbs');
+
+  // app.useStaticAssets(join(__dirname, '..', 'src/public'));
+  // app.setBaseViewsDir(join(__dirname, '..', 'src/views'));
+  // app.setViewEngine('hbs');
 
   const config = new DocumentBuilder()
     .setTitle('Buff163 Scraper')
@@ -24,6 +24,12 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
+
+  app.enableCors({
+    origin: [
+      "http://localhost:3000",
+    ]
+  })
 
   await app.listen(process.env.PORT || 3000);
 }

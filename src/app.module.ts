@@ -16,9 +16,10 @@ import { ConfigModule } from '@nestjs/config';
     }),
     ScraperModule, 
     ScheduleModule.forRoot(), 
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'src/public'),
-    }), AuthModule, UsersModule,
+    // ServeStaticModule.forRoot({
+    //   rootPath: join(__dirname, '..', 'src/public'),
+    // })
+    AuthModule, UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
