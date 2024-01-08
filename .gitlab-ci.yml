@@ -1,5 +1,5 @@
 variables:
-  GAR_IMAGE: europe-west6-docker.pkg.dev/$PROJECT_ID/buff163-scraper
+  GAR_IMAGE: europe-west6-docker.pkg.dev/$PROJECT_ID/buff163-scraper/buff163-scraper-img
 
 stages:
   - build
@@ -14,4 +14,4 @@ docker-image:
     - gcloud config set project $PROJECT_ID
     - gcloud auth configure-docker
     - gcloud builds submit --tag $GAR_IMAGE
-    #- gcloud run deploy propolis-img --image $GAR_IMAGE --region=europe-west6 --platform managed --allow-unauthenticated
+    #- gcloud app deploy *artifact-registry-image* --image $GAR_IMAGE --region=europe-west6 --platform managed --allow-unauthenticated
