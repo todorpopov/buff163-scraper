@@ -16,7 +16,7 @@ lerna-debug.log*
 
 
 # To-be set up first
-.gitlab-ci.yml
+#.gitlab-ci.yml
 
 
 # .env
