@@ -11,21 +11,21 @@ export class ScraperController {
     constructor(private readonly scraperService: ScraperService) {}
 
     @ApiOperation({ summary: 'Scrapes a page by specifying an item code' })
-    @UseGuards(AuthGuard)
+    // @UseGuards(AuthGuard)
     @Get('item/:itemCode')
     async scrapeItems(@Param('itemCode') itemCode: string) {
         return this.scraperService.scrapeItemsDetails(itemCode)
     }
     
     @ApiOperation({ summary: 'Scrapes the stickers prices on a page by specifying an item code' })
-    @UseGuards(AuthGuard)
+    // @UseGuards(AuthGuard)
     @Get('stickers/:itemCode')
     async getStickers(@Param('itemCode') itemCode: string) {
         return this.scraperService.scrapeStickersPrices(itemCode)
     }
     
     @ApiOperation({ summary: 'Scrapes the items details and stickers prices and combines the results' })
-    @UseGuards(AuthGuard)
+    // @UseGuards(AuthGuard)
     @Get("all/:itemCode")
     async scrapeAllDetails(@Param('itemCode') itemCode: string){
         const itemsList = await this.scraperService.scrapeAllDetails(itemCode)
@@ -33,7 +33,7 @@ export class ScraperController {
     }
     
     @ApiOperation({ summary: 'Scrapes item details and stickers prices of multiple, random item codes' })
-    @UseGuards(AuthGuard)
+    // @UseGuards(AuthGuard)
     @Get("")
     async scrapeMultiplePages(){
         const itemsList = await this.scraperService.scrapeMultiplePages()
@@ -41,7 +41,7 @@ export class ScraperController {
     }
 
     @ApiOperation({ summary: 'Scrapes multiple random item codes and returns only the ones with stickers' })
-    @UseGuards(AuthGuard)
+    // @UseGuards(AuthGuard)
     @Get("only_with_stickers")
     async getOnlyItemsWithStickers(){
         const itemsList = await this.scraperService.getOnlyItemsWithStickers()
@@ -49,7 +49,7 @@ export class ScraperController {
     }
 
     @ApiOperation({ summary: 'An observable SSE stream that consists of only items with stickers that meet certain criteria. Gets populated with data over time, as the cron restarts the scraper every 5 min' })
-    @UseGuards(AuthGuard)
+    // @UseGuards(AuthGuard)
     @Sse("stream")
     getDataSse(): Observable<any>{
         return this.scraperService.itemsSubject.pipe(filter(item => stickerPriceFilter(item['data'], 1)))
