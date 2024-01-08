@@ -11,7 +11,7 @@ RUN npm install
 COPY . /app
 
 RUN npm run build
-RUN npx playwright install
+RUN npx playwright install chromium
 RUN npx playwright install-deps
 
 EXPOSE 3000

@@ -1,5 +1,5 @@
 variables:
-  GAR_IMAGE: europe-west6-docker.pkg.dev/$PROJECT_ID/buff163-scraper/buff163-scraper-img
+  IMAGE: europe-west6-docker.pkg.dev/$PROJECT_ID/buff163-scraper/buff163-scraper-img
 
 stages:
   - build
@@ -13,5 +13,5 @@ docker-image:
     - gcloud auth activate-service-account --key-file $SA_AUTH
     - gcloud config set project $PROJECT_ID
     - gcloud auth configure-docker
-    - gcloud builds submit --tag $GAR_IMAGE
-    #- gcloud app deploy *artifact-registry-image* --image $GAR_IMAGE --region=europe-west6 --platform managed --allow-unauthenticated
+    - gcloud builds submit --tag $IMAGE
+    - gcloud app deploy --image-url=$IMAGE
