@@ -3,6 +3,10 @@ import { AppService } from './app.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+    constructor(private readonly appService: AppService) {}
 
+    @Get("")
+    homepage() {
+        return { msg: "A NestJS web application that scrapes Buf163, a major CS:GO marketplace" }
+    }
 }
