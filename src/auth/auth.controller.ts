@@ -14,7 +14,10 @@ export class AuthController {
     @Post('login')
     async signIn(@Body() signInDto: Record<string, any>, @Res({ passthrough: true }) response: Response) {
         const token = await this.authService.signIn(signInDto.username, signInDto.password)
-        response.cookie('token', token, { sameSite: "none", })
+        response.cookie('token', token, { 
+            sameSite: "none",
+            secure: true, 
+        })
         console.log("\n\nToken saved to cookies: " + token)
         return { username: signInDto.username }
     }
