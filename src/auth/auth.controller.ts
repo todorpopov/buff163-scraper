@@ -2,12 +2,11 @@ import { Body, Res, Controller, Post, HttpCode, HttpStatus, Get, Req } from '@ne
 import { AuthService } from './auth.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response , Request} from 'express'
-import { JwtService } from '@nestjs/jwt';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-    constructor(private authService: AuthService, private jwtService: JwtService) {}
+    constructor(private authService: AuthService) {}
 
     @ApiOperation({ summary: 'Login endpoint. Username and password expected as a JSON in the body of the request.' })
     @HttpCode(HttpStatus.OK)

@@ -165,7 +165,7 @@ export class ScraperService {
 
     itemsSubject = new ReplaySubject()
     
-    @Cron("*/5 * * * *")
+    @Cron("0 * * * *")
     async getDataSse() {
         const start = performance.now()
 
