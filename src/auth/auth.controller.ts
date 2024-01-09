@@ -36,9 +36,9 @@ export class AuthController {
         console.log("\n\nToken from cookies: " + token)
         if (token) {
             const userDetails = this.parseJwt(token)
-            return userDetails.username
+            return { user: {username: userDetails.username} }
         }
-        return {msg: "Not logged in!"}
+        return { user: null }
     }
 
 
