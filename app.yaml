@@ -1,14 +1,18 @@
 runtime: custom
-service: buff163-scraper
 env: flex
+service: buff163-scraper
 
 env_variables: 
   JWT_SECRET: $JWT_SECRET
 
-manual_scaling:
-  instances: 1
+automatic_scaling:
+  min_num_instances: 1
+  max_num_instances: 2
 
 resources:
-  cpu: 0.2
-  memory_gb: 0.6
+  cpu: 1
+  memory_gb: 0.5
   disk_size_gb: 10
+
+health_check:
+  enable_health_check: False
