@@ -8,28 +8,44 @@ import { Response , Request} from 'express'
 export class AuthController {
     constructor(private authService: AuthService) {}
 
+    // @ApiOperation({ summary: 'Login endpoint. Username and password expected as a JSON in the body of the request.' })
+    // @Post('login')
+    // async signIn(@Body() signInDto: Record<string, any>, @Res({ passthrough: true }) response: Response) {
+    //     const token = await this.authService.signIn(signInDto.username, signInDto.password)
+    //     response.cookie('token', token, { 
+    //         sameSite: "none",
+    // //         secure: true, 
+    //     })
+    //     console.log("\n\nToken saved to cookies: " + token)
+    //     return { username: signInDto.username }
+    // }
+
     @ApiOperation({ summary: 'Login endpoint. Username and password expected as a JSON in the body of the request.' })
-    @HttpCode(HttpStatus.OK)
     @Post('login')
-    async signIn(@Body() signInDto: Record<string, any>, @Res({ passthrough: true }) response: Response) {
-        const token = await this.authService.signIn(signInDto.username, signInDto.password)
+    async testSignIn(@Res({ passthrough: true }) response: Response) {
+        const token = await this.authService.signIn('admin', 'admin')
+        
         response.cookie('token', token, { 
             sameSite: "none",
             secure: true, 
         })
+                
         console.log("\n\nToken saved to cookies: " + token)
-        return { username: signInDto.username }
+        return { username: 'admin' }
     }
 
-    // @ApiOperation({ summary: 'Login endpoint. Username and password expected as a JSON in the body of the request.' })
-    // @HttpCode(HttpStatus.OK)
-    // @Get('login')
-    // async testSignIn(@Res({ passthrough: true }) response: Response) {
-    //     const token = await this.authService.signIn('admin', 'admin')
-    //     response.cookie('token', token)//, { maxAge: 60 * 60 * 1 })
-    //     console.log("\n\nToken saved to cookies: " + token)
-    //     return { username: 'admin' }
-    // }
+    @ApiOperation({ summary: 'Logout endpoint' })
+    @Post('logout')
+    async logout(@Res({ passthrough: true }) response: Response){
+        
+        response.clearCookie('token', { 
+            sameSite: "none",
+            secure: true, 
+        })
+
+        console.log("logged out")
+        return { msg: "Logged out!" }
+    }
 
     @ApiOperation({ summary: 'Return the current logged in user' })
     @Get('current_user')
@@ -37,15 +53,9 @@ export class AuthController {
         const token = request.cookies.token
         console.log("\n\nToken from cookies: " + token)
         if (token) {
-            const userDetails = this.parseJwt(token)
-            return { user: {username: userDetails.username} }
+            const tokenDetails = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString())
+            return { user: {username: tokenDetails.username} }
         }
         return { user: null }
-    }
-
-
-
-    private parseJwt(token: string) {
-        return JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
     }
 }
