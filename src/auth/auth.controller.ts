@@ -8,31 +8,31 @@ import { Response , Request} from 'express'
 export class AuthController {
     constructor(private authService: AuthService) {}
 
-    // @ApiOperation({ summary: 'Login endpoint. Username and password expected as a JSON in the body of the request.' })
-    // @Post('login')
-    // async signIn(@Body() signInDto: Record<string, any>, @Res({ passthrough: true }) response: Response) {
-    //     const token = await this.authService.signIn(signInDto.username, signInDto.password)
-    //     response.cookie('token', token, { 
-    //         sameSite: "none",
-    // //         secure: true, 
-    //     })
-    //     console.log("\n\nToken saved to cookies: " + token)
-    //     return { username: signInDto.username }
-    // }
-
     @ApiOperation({ summary: 'Login endpoint. Username and password expected as a JSON in the body of the request.' })
     @Post('login')
-    async testSignIn(@Res({ passthrough: true }) response: Response) {
-        const token = await this.authService.signIn('admin', 'admin')
-        
+    async signIn(@Body() signInDto: Record<string, any>, @Res({ passthrough: true }) response: Response) {
+        const token = await this.authService.signIn(signInDto.username, signInDto.password)
         response.cookie('token', token, { 
             sameSite: "none",
             secure: true, 
         })
-                
         console.log("\n\nToken saved to cookies: " + token)
-        return { username: 'admin' }
+        return { username: signInDto.username }
     }
+
+    // @ApiOperation({ summary: 'Login endpoint. Username and password expected as a JSON in the body of the request.' })
+    // @Post('login')
+    // async testSignIn(@Res({ passthrough: true }) response: Response) {
+    //     const token = await this.authService.signIn('admin', 'admin')
+        
+    //     response.cookie('token', token, { 
+    //         sameSite: "none",
+    //         secure: true, 
+    //     })
+                
+    //     console.log("\n\nToken saved to cookies: " + token)
+    //     return { username: 'admin' }
+    // }
 
     @ApiOperation({ summary: 'Logout endpoint' })
     @Post('logout')
