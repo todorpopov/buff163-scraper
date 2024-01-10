@@ -20,14 +20,14 @@ import { ConfigService } from '@nestjs/config';
       console.log("\n\nToken taken from cookies: " + token)
       
       if (!token) {
-        throw new UnauthorizedException();
+        throw new UnauthorizedException("1");
       }
 
       try {
         const payload = await this.jwtService.verifyAsync(token)
         request['user'] = payload
       } catch {
-        throw new UnauthorizedException();
+        throw new UnauthorizedException("2");
       }
 
       return true;
