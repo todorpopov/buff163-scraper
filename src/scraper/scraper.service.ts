@@ -18,7 +18,7 @@ export class ScraperService {
         const page = await browser.newPage()
         await page.goto(link)
 
-        const items = await page.$$eval('tr.selling', allItems => {
+        const items = await page.$$eval('tr.selling', (allItems = []) => {
             const itemsArray = [];
             allItems.forEach(async (item) => {
                 console.log('asd')
@@ -83,7 +83,7 @@ export class ScraperService {
             await table[i].hover()
 
             await page.waitForTimeout(1000)
-            const stickerPrices = await page.locator('//div[@class = "sticker-name"]').allInnerTexts()
+            const stickerPrices = await page.locator('//div[@class = "sticker-name"]').allInnerTexts() || []
             const itemStickers = parseStickersPrices(stickerPrices)
             stickers.push(itemStickers)
 
@@ -106,8 +106,8 @@ export class ScraperService {
     async scrapeAllDetails(itemCode: string){
         const start = performance.now()
 
-        const items = await this.scrapeItemsDetails(itemCode)
-        const stickerPrices = await this.scrapeStickersPrices(itemCode)
+        const items = await this.scrapeItemsDetails(itemCode) || []
+        const stickerPrices = await this.scrapeStickersPrices(itemCode) || []
         
         if(items.length !== stickerPrices.length) return "Items and stickers don't match"
         
@@ -149,7 +149,7 @@ export class ScraperService {
     async getOnlyItemsWithStickers() {
         const start = performance.now()
 
-        const items = await this.scrapeMultiplePages()
+        const items = await this.scrapeMultiplePages() || []
         const itemsWithStickers = [];
         items.forEach(item => {
             if(item.number_of_stickers !== 0){
@@ -169,7 +169,7 @@ export class ScraperService {
     async getDataSse() {
         const start = performance.now()
 
-        const items = await this.getOnlyItemsWithStickers();
+        const items = await this.getOnlyItemsWithStickers() || [];
         items.forEach(item => this.itemsSubject.next({data: item}))
 
         const end = performance.now()

@@ -1,6 +1,6 @@
-import { Controller, Get, Param, Render, Sse, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Sse, UseGuards } from '@nestjs/common';
 import { ScraperService } from './scraper.service';
-import { Observable, filter, map, of } from 'rxjs';
+import { Observable, filter } from 'rxjs';
 import { AuthGuard } from '../auth/auth.guard';
 import { stickerPriceFilter } from './external_functions';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -49,7 +49,7 @@ export class ScraperController {
     }
 
     @ApiOperation({ summary: 'An observable SSE stream that consists of only items with stickers that meet certain criteria. Gets populated with data over time, as the cron restarts the scraper every 5 min' })
-    @UseGuards(AuthGuard)
+    //@UseGuards(AuthGuard)
     @Sse("stream/filter=:filter")
     getDataSse(@Param('filter') stickerFilter: string): Observable<any>{
         return this.scraperService.itemsSubject.pipe(filter(item => stickerPriceFilter(item['data'], Number(stickerFilter))))
