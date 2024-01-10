@@ -49,7 +49,7 @@ export class ScraperController {
     }
 
     @ApiOperation({ summary: 'An observable SSE stream that consists of only items with stickers that meet certain criteria. Gets populated with data over time, as the cron restarts the scraper every 5 min' })
-    //@UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Sse("stream/filter=:filter")
     getDataSse(@Param('filter') stickerFilter: string): Observable<any>{
         return this.scraperService.itemsSubject.pipe(filter(item => stickerPriceFilter(item['data'], Number(stickerFilter))))
