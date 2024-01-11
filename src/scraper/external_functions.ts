@@ -60,6 +60,8 @@ export function getRandomItemCodes(numOfItems: number){
 }
 
 export function stickerPriceFilter(itemObject, targetPercantage = 100): boolean {
+    itemObject = itemObject || []
+    
     const itemPrice = itemObject.buff163_price_cny;
     let stickersTotal = 0;
 
