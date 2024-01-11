@@ -60,12 +60,12 @@ export function getRandomItemCodes(numOfItems: number){
 }
 
 export function stickerPriceFilter(itemObject, targetPercantage = 100): boolean {
-    itemObject = itemObject || []
-    
+    itemObject = itemObject || {}
+
     const itemPrice = itemObject.buff163_price_cny;
     let stickersTotal = 0;
 
-    itemObject.stickers.forEach(sticker => {
+    (itemObject.stickers || []).forEach(sticker => {
         stickersTotal += sticker.price
     })
     
