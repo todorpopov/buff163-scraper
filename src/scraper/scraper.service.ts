@@ -34,7 +34,7 @@ export class ScraperService {
                 
                 let itemName = goodsInfoJson.market_hash_name
                 if(itemName.includes('StatTrak')){
-                    itemName = itemName.slice(11)
+                    itemName = itemName.slice(10)
                 }
 
                 const stickers = assetInfoJson.info.stickers
@@ -165,7 +165,7 @@ export class ScraperService {
 
     itemsSubject = new ReplaySubject()
     
-    @Cron("*/5 * * * *")
+    @Cron("0 */6 * * *")
     async getDataSse() {
         const start = performance.now()
 

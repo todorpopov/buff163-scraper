@@ -5,10 +5,10 @@ service: buff163-scraper
 env_variables: 
   JWT_SECRET: $JWT_SECRET
 
-instance_class: B2
+instance_class: B1
 
 manual_scaling:
-  instances: 2
+  instances: 1
 
 resources:
   cpu: 1
