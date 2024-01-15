@@ -8,7 +8,7 @@
   "scripts": {
     "build": "nest build",
 
-    "palywright_install": "npx playwright install chromium && npx playwright install-deps",
+    "playwright_install": "npx playwright install chromium && npx playwright install-deps",
 
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
