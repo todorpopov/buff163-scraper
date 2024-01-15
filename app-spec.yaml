@@ -1,8 +1,0 @@
-
-name: sample-dockerfile
-services:
-- name: web
-  git:
-    repo_clone_url: https://gitlab.com/ai-software-ltd/buff163-scraper
-    branch: main
-  dockerfile_path: Dockerfile
