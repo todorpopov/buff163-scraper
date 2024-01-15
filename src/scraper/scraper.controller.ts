@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Sse, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Param, Sse, UseGuards } from '@nestjs/common';
 import { ScraperService } from './scraper.service';
 import { Observable, filter } from 'rxjs';
 import { AuthGuard } from '../auth/auth.guard';
@@ -54,11 +54,11 @@ export class ScraperController {
     getDataSse(@Param('filter') stickerFilter: string): Observable<any>{
         return this.scraperService.itemsSubject.pipe(filter(item => stickerPriceFilter(item['data'], Number(stickerFilter))))
     }
+
+    @ApiOperation({ summary: 'Removes items that are no longer available from the observable' })
+    //@UseGuards(AuthGuard)
+    @Get("refresh/:link")
+    updateObservable(@Param('link') link: string){
+        return this.scraperService.checkItemAvailability(link)
+    }
 }
-
-
-// "build:digitalocean": "npm install --production=false && npm run build && npm ci && npx playwright install --with-deps",
-// "engines": {
-//     "node": "18.18.2",
-//     "npm": "10.2.5"
-//   },

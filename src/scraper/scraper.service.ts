@@ -175,4 +175,13 @@ export class ScraperService {
         const end = performance.now()
         console.log(`6. Append data to the observable: ${((end - start) / 60000).toFixed(2)} m\n-----`)
     }
+
+    async checkItemAvailability(link: string): Promise<boolean> {
+        const browser = await chromium.launch()
+        const page = await browser.newPage()
+        await page.goto(link)
+
+        
+        return true
+    }
 }
