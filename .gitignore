@@ -15,9 +15,10 @@ lerna-debug.log*
 *.png
 
 
-# To-be set up first
-#.gitlab-ci.yml
-
+# Digitalocean
+.gitlab-ci.yml
+app.yaml
+Dockerfile
 
 # .env
 .env
