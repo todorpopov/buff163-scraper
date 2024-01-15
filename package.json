@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build && npm run playwright_install",
+    "build": "nest build",
 
     "build:digitalocean": "npm install --production=false && npm run build && npm ci && npx playwright install --with-deps",
     "playwright_install": "npx playwright install chromium && npx playwright install-deps",
