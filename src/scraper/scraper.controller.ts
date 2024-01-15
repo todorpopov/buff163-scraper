@@ -55,3 +55,10 @@ export class ScraperController {
         return this.scraperService.itemsSubject.pipe(filter(item => stickerPriceFilter(item['data'], Number(stickerFilter))))
     }
 }
+
+
+// "build:digitalocean": "npm install --production=false && npm run build && npm ci && npx playwright install --with-deps",
+// "engines": {
+//     "node": "18.18.2",
+//     "npm": "10.2.5"
+//   },
