@@ -8,7 +8,7 @@
   "scripts": {
     "build": "nest build",
 
-    "build:digitalocean": "npm install && npx playwright install --with-deps && npm run build",
+    "build:digitalocean": "npm install && npm run build && npm ci && npx playwright install --with-deps",
 
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
