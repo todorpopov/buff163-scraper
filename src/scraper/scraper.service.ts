@@ -181,11 +181,16 @@ export class ScraperService {
         const page = await browser.newPage()
         await page.goto(link)
 
+        const notVisible = await page.isVisible("div.nodata")
+
+        if(!notVisible){
+            return true
+        }
         
-        return true
+        return false
     }
 
-    @Cron("0 */6 * * *")
+    @Cron("0 0 * * *")
     clearObservable(): void {
         this.itemsSubject = new ReplaySubject()
     }

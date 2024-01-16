@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Sse, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Param, Sse, UseGuards, Body } from '@nestjs/common';
 import { ScraperService } from './scraper.service';
 import { Observable, filter } from 'rxjs';
 import { AuthGuard } from '../auth/auth.guard';
@@ -61,6 +61,13 @@ export class ScraperController {
     clearObservable(){
         this.scraperService.clearObservable()
         return{msg: "Items successfully cleared!"}
+    }
+
+    @ApiOperation({ summary: 'Checks item availability' })
+    //@UseGuards(AuthGuard)
+    @Get("available")
+    async checkAvailability(@Body() data: Record<string, any>){
+        return await this.scraperService.checkItemAvailability(data.link)
     }
 }
 
