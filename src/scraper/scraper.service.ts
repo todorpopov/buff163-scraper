@@ -186,7 +186,7 @@ export class ScraperService {
     }
 
     @Cron("0 */6 * * *")
-    emptyObservable(): void {
+    clearObservable(): void {
         this.itemsSubject = new ReplaySubject()
     }
 }

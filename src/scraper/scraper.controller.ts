@@ -55,11 +55,13 @@ export class ScraperController {
         return this.scraperService.itemsSubject.pipe(filter(item => stickerPriceFilter(item['data'], Number(stickerFilter))))
     }
 
-    @ApiOperation({ summary: 'Removes all data from the observable' })
+    @ApiOperation({ summary: 'Clears all data from the observable' })
     //@UseGuards(AuthGuard)
-    @Get("refresh")
-    updateObservable(){
-        return this.scraperService.emptyObservable()
-        // return this.scraperService.checkItemAvailability(link)
+    @Get("clear")
+    clearObservable(){
+        this.scraperService.clearObservable()
+        return{msg: "Items successfully cleared!"}
     }
 }
+
+//"build:digitalocean": "npm install --include=dev && npx playwright install chromium --with-deps && npm run build",
