@@ -10,7 +10,7 @@
     "node": "20"
   },
   "scripts": {
-    "build": "nest build",
+    "build": "npm install -D playwright-chromium && nest build",
 
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
