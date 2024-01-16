@@ -5,10 +5,13 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
+
+  "engines": {
+    "node": "20"
+  },
   "scripts": {
     "build": "nest build",
-
-    "build:digitalocean": "npm install && npm run build && npm ci && npx playwright install chromium --with-deps",
+    "build:digitalocean": "npm install --include=dev && npm run build && npm ci && npx playwright install chromium --with-deps",
 
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
@@ -21,10 +24,6 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json"
-  },
-  "engines": {
-    "node": "18.18.2",
-    "npm": "10.2.5"
   },
   "dependencies": {
     "@nestjs/cli": "^10.0.0",
