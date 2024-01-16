@@ -55,10 +55,11 @@ export class ScraperController {
         return this.scraperService.itemsSubject.pipe(filter(item => stickerPriceFilter(item['data'], Number(stickerFilter))))
     }
 
-    @ApiOperation({ summary: 'Removes items that are no longer available from the observable' })
+    @ApiOperation({ summary: 'Removes all data from the observable' })
     //@UseGuards(AuthGuard)
-    @Get("refresh/:link")
-    updateObservable(@Param('link') link: string){
-        return this.scraperService.checkItemAvailability(link)
+    @Get("refresh")
+    updateObservable(){
+        return this.scraperService.emptyObservable()
+        // return this.scraperService.checkItemAvailability(link)
     }
 }

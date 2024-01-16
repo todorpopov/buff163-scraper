@@ -11,7 +11,7 @@
   },
   "scripts": {
     "build": "nest build",
-    "build:digitalocean": "npm install --include=dev && npm run build && npm ci && npx playwright install chromium --with-deps",
+    "build:digitalocean": "npm install --include=dev && npx playwright install chromium --with-deps && npm run build",
 
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
