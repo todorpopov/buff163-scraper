@@ -4,7 +4,7 @@ import { parseStickersPrices, getRandomItemCodes } from './external_functions';
 import { ReplaySubject } from 'rxjs';
 import { Cron } from '@nestjs/schedule';
 
-const NUMBER_OF_ITEM_CODES = 10
+const NUMBER_OF_ITEM_CODES = 1
 
 @Injectable()
 export class ScraperService {
@@ -81,19 +81,10 @@ export class ScraperService {
         const table = await page.locator('td.img_td').elementHandles()
         for (let i = 0; i < table.length; i++) {
             await table[i].hover()
-
             await page.waitForTimeout(1000)
             const stickerPrices = await page.locator('//div[@class = "sticker-name"]').allInnerTexts() || []
             const itemStickers = parseStickersPrices(stickerPrices)
             stickers.push(itemStickers)
-
-            // await page.waitForSelector('//div[@class = "floattip"]').then( async () => {
-            //     const stickerPrices = await page.locator('//div[@class = "sticker-name"]').allInnerTexts()
-            //     const itemStickers = parseStickersPrices(stickerPrices)
-            //     stickers.push(itemStickers)
-            // }).catch(() => {
-            //     stickers.push(-1)
-            // });
         }
         await browser.close()
 
@@ -165,7 +156,7 @@ export class ScraperService {
 
     itemsSubject = new ReplaySubject()
     
-    @Cron("*/10 * * * *")
+    @Cron("*/2 * * * *")
     async getDataSse() {
         const start = performance.now()
 
