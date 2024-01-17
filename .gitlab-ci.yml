@@ -5,10 +5,11 @@ variables:
   DOCKER_HOST: tcp://docker:2375/
   DOCKER_DRIVER: overlay2
 
-deploy:
+docker-image:
+  image: docker:latest
+  services:
+    - docker:dind
   stage: deploy
-  only:
-    - main  # Trigger deployment only on changes to the master branch
   script:
     - docker login -u "$DOCKER_PASSWORD" -p "$DOCKER_PASSWORD" registry.digitalocean.com
     - docker build -t scraper-image .
