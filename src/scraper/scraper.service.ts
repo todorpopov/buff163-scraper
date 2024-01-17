@@ -4,7 +4,7 @@ import { parseStickersPrices, getRandomItemCodes } from './external_functions';
 import { ReplaySubject } from 'rxjs';
 import { Cron } from '@nestjs/schedule';
 
-const NUMBER_OF_ITEM_CODES = 1
+const NUMBER_OF_ITEM_CODES = 10
 
 @Injectable()
 export class ScraperService {
@@ -165,7 +165,7 @@ export class ScraperService {
 
     itemsSubject = new ReplaySubject()
     
-    @Cron("*/1 * * * *")
+    @Cron("*/10 * * * *")
     async getDataSse() {
         const start = performance.now()
 

@@ -70,5 +70,3 @@ export class ScraperController {
         return await this.scraperService.checkItemAvailability(data.link)
     }
 }
-
-//"build:digitalocean": "npm install --include=dev && npx playwright install chromium --with-deps && npm run build",
