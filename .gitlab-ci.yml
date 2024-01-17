@@ -10,7 +10,6 @@ deploy:
   only:
     - main  # Trigger deployment only on changes to the master branch
   script:
-    - echo "Deploying to DigitalOcean App Platform"
-    - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD" registry.digitalocean.com
+    - docker login -u "$DOCKER_PASSWORD" -p "$DOCKER_PASSWORD" registry.digitalocean.com
     - docker build -t scraper-image .
     - docker push registry.digitalocean.com/buff163-scraper-registry/scraper-image
