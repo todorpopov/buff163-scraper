@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { chromium } from 'playwright'
 import { parseStickersPrices, getRandomItemCodes } from './external_functions';
-import { ReplaySubject } from 'rxjs';
+import { ReplaySubject, from, of } from 'rxjs';
 import { Cron } from '@nestjs/schedule';
 
 const NUMBER_OF_ITEM_CODES = 1
@@ -9,10 +9,6 @@ const NUMBER_OF_ITEM_CODES = 1
 @Injectable()
 export class ScraperService {
     async scrapeItemsDetails(itemCode: string){
-        const start = performance.now()
-
-        console.log(itemCode)
-
         const link = `https://buff.163.com/goods/${itemCode}#page_num=1`
         const browser = await chromium.launch()
         const page = await browser.newPage()
@@ -21,7 +17,6 @@ export class ScraperService {
         const items = await page.$$eval('tr.selling', (allItems = []) => {
             const itemsArray = [];
             allItems.forEach(async (item) => {
-                console.log('asd')
                 const assetInfo = item.dataset.assetInfo
                 const goodsInfo = item.dataset.goodsInfo
                 const orderInfo = item.dataset.orderInfo
@@ -63,15 +58,10 @@ export class ScraperService {
         }) || []
 
         await browser.close()
-
-        const end = performance.now()
-        console.log(`-----\n1. Details: ${((end - start) / 1000).toFixed(2)} s`)
         return items
     }
 
     async scrapeStickersPrices(itemCode: string){
-        const start = performance.now()
-
         const link = `https://buff.163.com/goods/${itemCode}#page_num=1`
         const browser = await chromium.launch()
         const page = await browser.newPage()
@@ -87,16 +77,10 @@ export class ScraperService {
             stickers.push(itemStickers)
         }
         await browser.close()
-
-        const end = performance.now()
-        console.log(`2. Sticker prices: ${((end - start) / 1000).toFixed(2)} s`)
-
         return(stickers)
     }
     
     async scrapeAllDetails(itemCode: string){
-        const start = performance.now()
-
         const items = await this.scrapeItemsDetails(itemCode) || []
         const stickerPrices = await this.scrapeStickersPrices(itemCode) || []
         
@@ -115,15 +99,10 @@ export class ScraperService {
             }
         }
 
-        const end = performance.now()
-        console.log(`3. Combined details: ${((end - start) / 1000).toFixed(2)} s\n-----`)
-
         return items
     }
     
     async scrapeMultiplePages(){
-        const start = performance.now()
-
         const itemCodes = getRandomItemCodes(NUMBER_OF_ITEM_CODES)
         
         let itemsDetails = []
@@ -131,15 +110,10 @@ export class ScraperService {
             itemsDetails.push(await this.scrapeAllDetails(itemCodes[i]))
         }
         
-        const end = performance.now()
-        console.log(`4. Scraping multiple pages: ${((end - start) / 60000).toFixed(2)} m`)
-
         return itemsDetails.flat()
     }
 
     async getOnlyItemsWithStickers() {
-        const start = performance.now()
-
         const items = await this.scrapeMultiplePages() || []
         const itemsWithStickers = [];
         items.forEach(item => {
@@ -148,23 +122,41 @@ export class ScraperService {
             }
         })
 
-        const end = performance.now()
-        console.log(`5. Only items with stickers: ${((end - start) / 60000).toFixed(2)} m`)
-
         return itemsWithStickers
     }
-
-    itemsSubject = new ReplaySubject()
     
-    @Cron("*/2 * * * *")
+    @Cron("*/5 * * * *")
     async getDataSse() {
+        const items = await this.getOnlyItemsWithStickers() || [];
+        this.asignItems(items)
+    }
+
+    @Cron("1 */4 * * *")
+    async generalAvailability(){
         const start = performance.now()
 
-        const items = await this.getOnlyItemsWithStickers() || [];
-        items.forEach(item => this.itemsSubject.next({data: item}))
+        const items = [...this.itemsArray]
+        console.log("Array length (pre): " + items.length)
 
-        const end = performance.now()
-        console.log(`6. Append data to the observable: ${((end - start) / 60000).toFixed(2)} m\n-----`)
+        let false_num = 0
+        for(let i = 0; i < items.length; i++){
+            console.log(`Link: ${items[i].seller_profile_link}`)
+            const statement = await this.checkItemAvailability(items[i].seller_profile_link)
+            console.log(`Statement: ${statement}`)
+            if(statement !== true){
+                items.splice(i, 1)
+                false_num++
+            }
+        }
+        console.log("Array length (post): " + items.length)
+        console.log("Number of falses: " + false_num)
+
+        this.clearItems()
+        this.asignItems(items)
+
+        const end = performance.now()   
+        console.log(`Check item availability: ${((end - start) / 60000).toFixed(2)} m`)
+        return { msg: "Successfully removed unavailable items!"}
     }
 
     async checkItemAvailability(link: string): Promise<boolean> {
@@ -180,9 +172,23 @@ export class ScraperService {
         
         return false
     }
+    
 
+
+    itemsSubject = new ReplaySubject()
+    itemsArray = []
+
+    asignItems(items: any[]): void {
+        items.forEach(item => {
+            this.itemsSubject.next({data: item})
+            this.itemsArray.push(item)
+        })
+    }
+    
     @Cron("0 0 * * *")
-    clearObservable(): void {
+    clearItems(): void {
+        this.itemsSubject.complete()
         this.itemsSubject = new ReplaySubject()
+        this.itemsArray = []
     }
 }

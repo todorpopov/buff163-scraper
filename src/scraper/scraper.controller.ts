@@ -54,19 +54,32 @@ export class ScraperController {
     getDataSse(@Param('filter') stickerFilter: string): Observable<any>{
         return this.scraperService.itemsSubject.pipe(filter(item => stickerPriceFilter(item['data'], Number(stickerFilter))))
     }
+    @ApiOperation({ summary: 'Returns the same items as the observable stream, but in a single request, instead of an SSE stream' })
+    //@UseGuards(AuthGuard)
+    @Get("static/filter=:filter")
+    getDataStatic(@Param('filter') stickerFilter: string){
+        return this.scraperService.itemsArray.filter((item) => stickerPriceFilter(item, Number(stickerFilter)))
+    }
 
-    @ApiOperation({ summary: 'Clears all data from the observable' })
+    @ApiOperation({ summary: 'Clears all data from the observable and the array' })
     //@UseGuards(AuthGuard)
     @Get("clear")
     clearObservable(){
-        this.scraperService.clearObservable()
-        return{msg: "Items successfully cleared!"}
+        this.scraperService.clearItems()
+        return { msg: "Items successfully cleared!" }
     }
 
-    @ApiOperation({ summary: 'Checks item availability' })
+    @ApiOperation({ summary: 'Checks the availability of a single item' })
     //@UseGuards(AuthGuard)
     @Get("available")
     async checkAvailability(@Body() data: Record<string, any>){
         return await this.scraperService.checkItemAvailability(data.link)
+    }
+
+    @ApiOperation({ summary: 'Checks item availability' })
+    //@UseGuards(AuthGuard)
+    @Get("get_availability")
+    async availability(){
+        return await this.scraperService.generalAvailability()
     }
 }
