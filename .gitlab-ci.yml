@@ -2,7 +2,7 @@ stages:
   - deploy
 
 variables:
-  DOCKER_IMAGE: registry.digitalocean.com/buff163-scraper-registry/scraper-image
+  DOCKER_IMAGE: registry.digitalocean.com/buff163-scraper-registry/scraper-image:latest
   CONTAINER_NAME: scraper-container
 
 docker-image:
