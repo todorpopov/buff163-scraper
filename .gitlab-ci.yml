@@ -14,9 +14,9 @@ deploy-job:
       - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
       - mkdir -p ~/.ssh
       - chmod 700 ~/.ssh
-      # - cp "$SSH_KNOWN_HOSTS" ~/.ssh/known_hosts
-      # - chmod 644 ~/.ssh/known_hosts
       - echo "$SSH_PRIVATE_KEY" >> ~/.ssh/id_rsa
+      - touch ~/.ssh/known_hosts
+      - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
       
   script:
     - docker login -u "$DOCKER_PASSWORD" -p "$DOCKER_PASSWORD" registry.digitalocean.com
