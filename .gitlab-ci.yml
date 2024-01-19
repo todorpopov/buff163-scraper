@@ -1,13 +1,26 @@
 stages:
-  - deploy
+  - deploy_image
+  - build_from_image
 
-docker-image:
+variables:
+  DOCKER_IMAGE: registry.digitalocean.com/buff163-scraper-registry/scraper-image
+  CONTAINER_NAME: scraper-container
+
+deploy_image:
   image: docker:latest
   services:
     - docker:dind
-  stage: deploy
+  stage: deploy_image
   script:
     - docker login -u "$DOCKER_PASSWORD" -p "$DOCKER_PASSWORD" registry.digitalocean.com
     - docker build -t scraper-image .
-    - docker tag scraper-image registry.digitalocean.com/buff163-scraper-registry/scraper-image
-    - docker push registry.digitalocean.com/buff163-scraper-registry/scraper-image
+    - docker tag scraper-image DOCKER_IMAGE
+    - docker push DOCKER_IMAGE
+  
+build_from_image:
+  -stage: build_from_image
+  -script: 
+    - sshpass -p $DROPLET_PASSWORD ssh -o StrictHostKeyChecking=no root@$DROPLET_IP "docker login -u "$DOCKER_PASSWORD" -p "$DOCKER_PASSWORD" registry.digitalocean.com && docker pull DOCKER_IMAGE && docker stop CONTAINER_NAME && docker rm $(docker ps --filter status=exited -q) && docker run -d --name CONTAINER_NAME --restart always -p 3000:3000 $DOCKER_IMAGE_NAME"
+
+#Env vars to add to gitlab:
+# DROPLET_PASSWORD, DROPLET_IP

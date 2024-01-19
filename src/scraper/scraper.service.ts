@@ -131,7 +131,7 @@ export class ScraperService {
         this.asignItems(items)
     }
 
-    @Cron("1 */4 * * *")
+    //@Cron("1 */4 * * *")
     async generalAvailability(){
         const start = performance.now()
 
