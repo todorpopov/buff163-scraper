@@ -20,7 +20,7 @@ deploy_image:
 build_from_image:
   -stage: build_from_image
   -script: 
-    - sshpass -p $DROPLET_PASSWORD ssh -o StrictHostKeyChecking=no root@$DROPLET_IP "docker login -u "$DOCKER_PASSWORD" -p "$DOCKER_PASSWORD" registry.digitalocean.com && docker pull DOCKER_IMAGE && docker stop CONTAINER_NAME && docker rm $(docker ps --filter status=exited -q) && docker run -d --name CONTAINER_NAME --restart always -p 3000:3000 $DOCKER_IMAGE_NAME"
+    - sshpass -p $DROPLET_PASSWORD ssh -o StrictHostKeyChecking=no root@$DROPLET_IP "docker login -u "$DOCKER_PASSWORD" -p "$DOCKER_PASSWORD" registry.digitalocean.com && docker stop CONTAINER_NAME && docker rm $(docker ps --filter status=exited -q) && docker pull DOCKER_IMAGE && docker run -d --name CONTAINER_NAME --restart always -p 3000:3000 $DOCKER_IMAGE_NAME"
 
 #Env vars to add to gitlab:
 # DROPLET_PASSWORD, DROPLET_IP
