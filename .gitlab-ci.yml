@@ -1,5 +1,5 @@
 before_script:
-  - apk update && apk add openssh
+  - apk add --no-cache --upgrade bash
 
 stages:
   - deploy
