@@ -1,7 +1,6 @@
 before_script:
-  -script:
-    - apk update && apk add openssh
-    - ./docker_install.sh > /dev/null
+  - apk update && apk add openssh
+  - ./docker_install.sh > /dev/null
 
 stages:
   - deploy
