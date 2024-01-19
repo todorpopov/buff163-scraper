@@ -13,7 +13,7 @@ deploy-job:
       - eval $(ssh-agent -s)
       - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
       - mkdir -p ~/.ssh
-      - chmod 700 ~/.ssh
+      - chmod 644 ~/.ssh
       - echo "$SSH_PRIVATE_KEY" >> ~/.ssh/id_rsa
       - touch ~/.ssh/known_hosts
       - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
@@ -23,4 +23,4 @@ deploy-job:
     - docker build -t scraper-image .
     - docker tag scraper-image registry.digitalocean.com/buff163-scraper-registry/scraper-image
     - docker push registry.digitalocean.com/buff163-scraper-registry/scraper-image
-    - ssh root@$DROPLET_IP "docker login -u "$DOCKER_PASSWORD" -p "$DOCKER_PASSWORD" registry.digitalocean.com && docker stop scraper-container && docker rm $(docker ps --filter status=exited -q) && docker pull registry.digitalocean.com/buff163-scraper-registry/scraper-image && docker run -d --name scraper-container --restart always -p 3000:3000 scraper-image"
+    - ssh root@$DROPLET_IP "docker login -u "$DOCKER_PASSWORD" -p "$DOCKER_PASSWORD" registry.digitalocean.com && docker stop scraper-container && docker rm scraper-container && docker pull registry.digitalocean.com/buff163-scraper-registry/scraper-image && docker run -d --name scraper-container --restart always -p 3000:3000 scraper-image"
