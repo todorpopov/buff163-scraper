@@ -1,19 +1,23 @@
-before_script:
-    - 'command -v ssh-agent >/dev/null || ( apk update && apk add openssh)'
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - echo "$SSH_PRIVATE_KEY" >> ~/.ssh/id_rsa
-
 stages:
   - deploy
 
-docker-image:
+deploy-job:
   stage: deploy
+
   image: docker:latest
   services:
     - docker:dind
+
+  before_script:
+      - 'command -v ssh-agent >/dev/null || ( apk update && apk add openssh)'
+      - eval $(ssh-agent -s)
+      - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+      - mkdir -p ~/.ssh
+      - chmod 700 ~/.ssh
+      - cp "$SSH_KNOWN_HOSTS" ~/.ssh/known_hosts
+      - chmod 644 ~/.ssh/known_hosts
+      - echo "$SSH_PRIVATE_KEY" >> ~/.ssh/id_rsa
+      
   script:
     - docker login -u "$DOCKER_PASSWORD" -p "$DOCKER_PASSWORD" registry.digitalocean.com
     - docker build -t scraper-image .
