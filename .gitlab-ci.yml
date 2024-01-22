@@ -23,4 +23,4 @@ deploy-job:
     - docker build -t scraper-image .
     - docker tag scraper-image registry.digitalocean.com/buff163-scraper-registry/scraper-image
     - docker push registry.digitalocean.com/buff163-scraper-registry/scraper-image
-    - ssh root@$DROPLET_IP "docker login -u '$DOCKER_PASSWORD' -p '$DOCKER_PASSWORD' registry.digitalocean.com && docker stop scraper-container && docker rm scraper-container && docker pull registry.digitalocean.com/buff163-scraper-registry/scraper-image && docker run -d --name scraper-container --restart always -p 3000:3000 scraper-image"
+    - ssh root@$DROPLET_IP "docker stop scraper-container && docker rm scraper-container && docker login -u '$DOCKER_PASSWORD' -p '$DOCKER_PASSWORD' registry.digitalocean.com && docker pull registry.digitalocean.com/buff163-scraper-registry/scraper-image:latest && docker run -d --name scraper-container --restart always -p 3000:3000 scraper-image"
