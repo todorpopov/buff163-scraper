@@ -1,7 +1,7 @@
 stages:
   - deploy
 
-deploy-job:
+deploy-service:
   stage: deploy
 
   image: docker:latest
