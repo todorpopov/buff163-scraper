@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ScraperModule } from './scraper/scraper.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from './auth/auth.module';
@@ -17,6 +16,5 @@ import { ConfigModule } from '@nestjs/config';
     AuthModule, UsersModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
