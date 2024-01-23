@@ -68,6 +68,10 @@ export function stickerPriceFilter(itemObject, targetPercantage): boolean {
     (itemObject.stickers || []).forEach(sticker => {
         stickersTotal += sticker.price
     })
+
+    if(stickersTotal === 0){
+        return false
+    }
     
     const targetPrice = itemPrice * (targetPercantage / 100)
     if (stickersTotal >= targetPrice){

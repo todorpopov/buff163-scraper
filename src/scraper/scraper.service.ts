@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { chromium } from 'playwright'
 import { parseStickersPrices, getRandomItemCodes } from './external_functions';
-import { ReplaySubject, from, of } from 'rxjs';
+import { ReplaySubject } from 'rxjs';
 import { Cron } from '@nestjs/schedule';
+import { performance } from 'perf_hooks';
 
 const NUMBER_OF_ITEM_CODES = 1
 
@@ -125,37 +126,32 @@ export class ScraperService {
         return itemsWithStickers
     }
     
-    @Cron("*/5 * * * *")
+    @Cron("*/3 * * * *")
     async getDataSse() {
         const items = await this.getOnlyItemsWithStickers() || [];
         this.asignItems(items)
     }
 
-    //@Cron("1 */4 * * *")
+    @Cron("1 */4 * * *")
     async generalAvailability(){
-        const start = performance.now()
-
         const items = [...this.itemsArray]
-        console.log("Array length (pre): " + items.length)
 
         let false_num = 0
         for(let i = 0; i < items.length; i++){
-            console.log(`Link: ${items[i].seller_profile_link}`)
+            const start = performance.now()
             const statement = await this.checkItemAvailability(items[i].seller_profile_link)
-            console.log(`Statement: ${statement}`)
+            await new Promise(resolve => setTimeout(resolve, 5000));
             if(statement !== true){
                 items.splice(i, 1)
                 false_num++
             }
+            const end = performance.now()
+            console.log(`Time to check and remove element: ${end - start}ms`)
         }
-        console.log("Array length (post): " + items.length)
-        console.log("Number of falses: " + false_num)
 
         this.clearItems()
         this.asignItems(items)
 
-        const end = performance.now()   
-        console.log(`Check item availability: ${((end - start) / 60000).toFixed(2)} m`)
         return { msg: "Successfully removed unavailable items!"}
     }
 
@@ -185,7 +181,7 @@ export class ScraperService {
         })
     }
     
-    @Cron("0 0 * * *")
+    @Cron("0 0 */2 * *")
     clearItems(): void {
         this.itemsSubject.complete()
         this.itemsSubject = new ReplaySubject()
