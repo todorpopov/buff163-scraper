@@ -130,6 +130,7 @@ export class ScraperService {
     async getDataSse() {
         const items = await this.getOnlyItemsWithStickers() || [];
         this.asignItems(items)
+        console.log(`Items assigned to SSE on: ${new Date()}`)
     }
 
     @Cron("1 */4 * * *")
@@ -151,7 +152,7 @@ export class ScraperService {
 
         this.clearItems()
         this.asignItems(items)
-
+        console.log(`Items checked for availability on: ${new Date()}`)
         return { msg: "Successfully removed unavailable items!"}
     }
 
@@ -186,5 +187,6 @@ export class ScraperService {
         this.itemsSubject.complete()
         this.itemsSubject = new ReplaySubject()
         this.itemsArray = []
+        console.log(`Items cleared on: ${new Date()}`)
     }
 }

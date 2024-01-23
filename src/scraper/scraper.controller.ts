@@ -52,17 +52,25 @@ export class ScraperController {
     @UseGuards(AuthGuard)
     @Sse("stream/filter=:filter")
     getDataSse(@Param('filter') stickerFilter: string): Observable<any>{
-        return this.scraperService.itemsSubject.pipe(filter(item => stickerPriceFilter(item['data'], Number(stickerFilter))))
+        if(!stickerFilter.match("[1-9][0-9]*")){
+            return this.scraperService.itemsSubject
+        }else {
+            return this.scraperService.itemsSubject.pipe(filter(item => stickerPriceFilter(item['data'], Number(stickerFilter))))
+        }
     }
     @ApiOperation({ summary: 'Returns the same items as the observable stream, but in a single request, instead of an SSE stream' })
-    // @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Get("static/filter=:filter")
     getDataStatic(@Param('filter') stickerFilter: string){
-        return this.scraperService.itemsArray.filter((item) => stickerPriceFilter(item, Number(stickerFilter)))
+        if(!stickerFilter.match("[1-9][0-9]*")){
+            return this.scraperService.itemsArray
+        }else{
+            return this.scraperService.itemsArray.filter((item) => stickerPriceFilter(item, Number(stickerFilter)))
+        }
     }
 
     @ApiOperation({ summary: 'Clears all data from the observable and the array' })
-    // @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Get("clear")
     clearObservable(){
         this.scraperService.clearItems()
@@ -70,16 +78,24 @@ export class ScraperController {
     }
 
     @ApiOperation({ summary: 'Checks the availability of a single item. Link is passed in the body' })
-    // @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Get("is_available")
     async checkAvailability(@Body() data: Record<string, any>){
         return await this.scraperService.checkItemAvailability(data.link)
     }
 
     @ApiOperation({ summary: 'Checks item availability' })
-    // @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Get("all_available")
     async availability(){
         return await this.scraperService.generalAvailability()
+    }
+
+    @ApiOperation({ summary: "Get server state statistics" })
+    @UseGuards(AuthGuard)
+    @Get("stats")
+    stats(){
+        const itemsNum = this.scraperService.itemsArray.length
+        return { number_of_items: itemsNum }
     }
 }
