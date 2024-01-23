@@ -10,7 +10,10 @@ async function bootstrap() {
   app.use(cookieParser());
   
   app.enableCors({
-    origin: "https://scraperfe.vercel.app/",
+    origin: [
+      'https://scraperfe.vercel.app', 
+      'http://localhost:3000'
+    ],
     credentials: true
   })
 
