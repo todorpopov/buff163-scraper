@@ -126,14 +126,14 @@ export class ScraperService {
         return itemsWithStickers
     }
     
-    @Cron("*/3 * * * *")
+    @Cron("*/2 * * * *")
     async getDataSse() {
         const items = await this.getOnlyItemsWithStickers() || [];
         this.asignItems(items)
         console.log(`Items assigned to SSE on: ${new Date()}`)
     }
 
-    @Cron("1 */4 * * *")
+    // @Cron("1 */4 * * *")
     async generalAvailability(){
         const items = [...this.itemsArray]
 
@@ -182,7 +182,7 @@ export class ScraperService {
         })
     }
     
-    @Cron("0 0 */2 * *")
+    @Cron("0 0 * * *")
     clearItems(): void {
         this.itemsSubject.complete()
         this.itemsSubject = new ReplaySubject()
