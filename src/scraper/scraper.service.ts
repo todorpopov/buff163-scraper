@@ -4,6 +4,9 @@ import { parseStickersPrices, getRandomItemCodes } from './external_functions';
 import { ReplaySubject } from 'rxjs';
 import { Cron } from '@nestjs/schedule';
 import { performance } from 'perf_hooks';
+import { cpuUsage } from 'process';
+
+const os = require('node-os-utils')
 
 const NUMBER_OF_ITEM_CODES = 1
 
@@ -130,7 +133,10 @@ export class ScraperService {
     async getDataSse() {
         const items = await this.getOnlyItemsWithStickers() || [];
         this.asignItems(items)
-        console.log(`Items assigned to SSE on: ${new Date()}`)
+
+        if(items.length !== 0){
+            console.log(`Items assigned to SSE on: ${new Date()}`)
+        }
     }
 
     // @Cron("1 */4 * * *")
@@ -161,7 +167,12 @@ export class ScraperService {
         const page = await browser.newPage()
         await page.goto(link)
 
-        const notVisible = await page.isVisible("div.nodata")
+        let notVisible = true
+        try{
+            notVisible = await page.isVisible("div.nodata")
+        }catch (error) {
+            console.error(error)
+        }
 
         if(!notVisible){
             return true
@@ -188,5 +199,25 @@ export class ScraperService {
         this.itemsSubject = new ReplaySubject()
         this.itemsArray = []
         console.log(`Items cleared on: ${new Date()}`)
+    }
+
+
+    statsObservable = new ReplaySubject()
+    @Cron("*/5 * * * *")
+    async getStats(){
+        const date = new Date()
+
+        const cpuInfo = await os.cpu.usage().then(info => {return info})
+        const memoryInfo = await os.mem.free().then(info => {return info})
+
+        const stats = { 
+            time: `${date.getHours()}:${date.getMinutes()}`,
+            number_of_items: this.itemsArray.length,
+            cpu_load_percentage: cpuInfo,
+            free_memory_mb: Math.round(memoryInfo.freeMemMb),
+            total_memory_mb: Math.round(memoryInfo.totalMemMb),
+        }
+
+        this.statsObservable.next({data: stats})
     }
 }
