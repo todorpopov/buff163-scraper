@@ -105,7 +105,7 @@ export class ScraperService {
 
         await browser.close()
         const end = performance.now()
-        console.log(`Scrape all: ${(end - start) / 1000}s`)
+        console.log(`\nScrape all: ${Math.round((end - start) / 1000)} s\n`)
 
         return items
     }
@@ -133,7 +133,7 @@ export class ScraperService {
         return itemsWithStickers
     }
     
-    @Cron("*/1 * * * *")
+    @Cron("*/3 * * * *")
     async getDataSse() {
         const items = await this.getOnlyItemsWithStickers() || [];
         this.asignItems(items)
@@ -183,7 +183,7 @@ export class ScraperService {
 
             await page.close()
             const end = performance.now()
-            console.log(`Time to check link: ${Math.round((end - start) / 1000)} s`)
+            console.log(`\nTime to check link: ${Math.round((end - start) / 1000)} s\n`)
         }
 
         await browser.close()
@@ -207,12 +207,12 @@ export class ScraperService {
         this.itemsSubject.complete()
         this.itemsSubject = new ReplaySubject()
         this.itemsArray = []
-        console.log(`Items cleared on: ${new Date()}`)
+        console.log(`\nItems cleared on: ${new Date()}\n`)
     }
 
 
     statsArray = []
-    @Cron("*/1 * * * *")
+    @Cron("*/5 * * * *")
     async getStats(){
         const date = new Date()
 
