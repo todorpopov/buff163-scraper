@@ -4,6 +4,7 @@ import { Observable, filter } from 'rxjs';
 import { AuthGuard } from '../auth/auth.guard';
 import { stickerPriceFilter } from './external_functions';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { chromium } from 'playwright';
 
 @ApiTags('scraper')
 @Controller('scraper')
@@ -14,14 +15,22 @@ export class ScraperController {
     // @UseGuards(AuthGuard)
     @Get('item/:itemCode')
     async scrapeItems(@Param('itemCode') itemCode: string) {
-        return this.scraperService.scrapeItemsDetails(itemCode)
+        const browser = await chromium.launch()
+        const result = await this.scraperService.scrapeItemsDetails(browser, itemCode)
+        await browser.close()
+
+        return result
     }
     
     @ApiOperation({ summary: 'Scrapes the stickers prices on a page by specifying an item code' })
     // @UseGuards(AuthGuard)
     @Get('stickers/:itemCode')
     async getStickers(@Param('itemCode') itemCode: string) {
-        return this.scraperService.scrapeStickersPrices(itemCode)
+        const browser = await chromium.launch()
+        const result = await this.scraperService.scrapeStickersPrices(browser, itemCode)
+        await browser.close()
+
+        return result
     }
     
     @ApiOperation({ summary: 'Scrapes the items details and stickers prices and combines the results' })

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { chromium } from 'playwright'
+import { Browser, chromium } from 'playwright'
 import { parseStickersPrices, getRandomItemCodes } from './external_functions';
 import { ReplaySubject } from 'rxjs';
 import { Cron } from '@nestjs/schedule';
@@ -11,9 +11,8 @@ const NUMBER_OF_ITEM_CODES = 1
 
 @Injectable()
 export class ScraperService {
-    async scrapeItemsDetails(itemCode: string){
+    async scrapeItemsDetails(browser: Browser, itemCode: string){
         const link = `https://buff.163.com/goods/${itemCode}#page_num=1`
-        const browser = await chromium.launch()
         const page = await browser.newPage()
         await page.goto(link)
 
@@ -60,13 +59,12 @@ export class ScraperService {
             return itemsArray
         }) || []
 
-        await browser.close()
+        await page.close()
         return items
     }
 
-    async scrapeStickersPrices(itemCode: string){
+    async scrapeStickersPrices(browser: Browser, itemCode: string){
         const link = `https://buff.163.com/goods/${itemCode}#page_num=1`
-        const browser = await chromium.launch()
         const page = await browser.newPage()
         await page.goto(link)
         
@@ -79,13 +77,16 @@ export class ScraperService {
             const itemStickers = parseStickersPrices(stickerPrices)
             stickers.push(itemStickers)
         }
-        await browser.close()
+        await page.close()
         return(stickers)
     }
     
     async scrapeAllDetails(itemCode: string){
-        const items = await this.scrapeItemsDetails(itemCode) || []
-        const stickerPrices = await this.scrapeStickersPrices(itemCode) || []
+        const start = performance.now()
+        const browser = await chromium.launch()
+
+        const items = await this.scrapeItemsDetails(browser, itemCode) || []
+        const stickerPrices = await this.scrapeStickersPrices(browser, itemCode) || []
         
         if(items.length !== stickerPrices.length) return "Items and stickers don't match"
         
@@ -101,6 +102,10 @@ export class ScraperService {
                 items[i].stickers[j].price = stickerPrices[i][j]
             }
         }
+
+        await browser.close()
+        const end = performance.now()
+        console.log(`Scrape all: ${(end - start) / 1000}s`)
 
         return items
     }
@@ -156,9 +161,9 @@ export class ScraperService {
         this.asignItems(remainingItems)
         
         const end = performance.now()
-        console.log(`Number of links that returned available: ${availableItemsLinks.length}`)
+        console.log(`\nNumber of links that returned available: ${availableItemsLinks.length}`)
         console.log(`Number of items: Pre(${arrayCopy.length}) | Post(${remainingItems.length})`)
-        console.log(`Time to check and remove elements: ${(end - start) / 1000}s`)
+        console.log(`Time to check and remove elements: ${Math.round((end - start) / 1000)} s\n`)
     }
 
     async checkItemsAvailability(links: string[]): Promise<Array<string>> {
@@ -178,7 +183,7 @@ export class ScraperService {
 
             await page.close()
             const end = performance.now()
-            console.log(`Time to check link: ${(end - start) / 1000}s`)
+            console.log(`Time to check link: ${Math.round((end - start) / 1000)} s`)
         }
 
         await browser.close()
