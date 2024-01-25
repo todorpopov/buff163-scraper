@@ -202,7 +202,7 @@ export class ScraperService {
     }
 
 
-    statsObservable = new ReplaySubject()
+    statsArray = []
     @Cron("*/5 * * * *")
     async getStats(){
         const date = new Date()
@@ -211,13 +211,12 @@ export class ScraperService {
         const memoryInfo = await os.mem.free().then(info => {return info})
 
         const stats = { 
-            time: `${date.getHours()}:${date.getMinutes()}`,
             number_of_items: this.itemsArray.length,
             cpu_load_percentage: cpuInfo,
             free_memory_mb: Math.round(memoryInfo.freeMemMb),
             total_memory_mb: Math.round(memoryInfo.totalMemMb),
         }
 
-        this.statsObservable.next({data: stats})
+        this.statsArray.push({time: `${date.getHours()}:${date.getMinutes()}`,data: stats})
     }
 }

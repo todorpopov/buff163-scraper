@@ -93,8 +93,8 @@ export class ScraperController {
 
     @ApiOperation({ summary: "Get server state statistics" })
     // @UseGuards(AuthGuard)
-    @Sse("stats")
+    @Get("stats")
     stats(){
-        return this.scraperService.statsObservable
+        return this.scraperService.statsArray
     }
 }
