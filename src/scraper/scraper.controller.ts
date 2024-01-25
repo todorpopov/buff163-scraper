@@ -97,11 +97,11 @@ export class ScraperController {
     // @UseGuards(AuthGuard)
     @Get("all_available")
     async availability(){
-        this.scraperService.availability()
-        return { msg: "Item availability check has started!" }
+        await this.scraperService.availability()
+        return { msg: "Item availability check complete!" }
     }
 
-    @ApiOperation({ summary: "Get server state statistics" })
+    @ApiOperation({ summary: "Get server stats" })
     // @UseGuards(AuthGuard)
     @Get("stats")
     stats(){

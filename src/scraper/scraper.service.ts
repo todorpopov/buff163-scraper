@@ -105,7 +105,7 @@ export class ScraperService {
 
         await browser.close()
         const end = performance.now()
-        console.log(`\nScrape all: ${Math.round((end - start) / 1000)} s\n`)
+        console.log(`Scrape all: ${Math.round((end - start) / 1000)} s`)
 
         return items
     }
@@ -139,7 +139,7 @@ export class ScraperService {
         this.asignItems(items)
     }
 
-    // @Cron("1 */12 * * *")
+    @Cron("1 */4 * * *")
     async availability(){
         const start = performance.now()
         const arrayCopy = [...this.itemsArray]
@@ -176,14 +176,16 @@ export class ScraperService {
             await page.goto(links[i])
 
             const statement = await page.isVisible("div.nodata")
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            await page.close()
             
             if(!statement){
                 results.push(links[i])
             }
 
-            await page.close()
             const end = performance.now()
-            console.log(`\nTime to check link: ${Math.round((end - start) / 1000)} s\n`)
+            console.log(`Time to check link: ${Math.round((end - start) / 1000)} s`)
         }
 
         await browser.close()
