@@ -12,7 +12,7 @@ import { ConfigModule } from '@nestjs/config';
     UsersModule,
     JwtModule.register({
       global: true,
-      secret: `${process.env.JWT_SECRET}`,
+      secret: `TEST SECRET, NOT INTENDED TO STAY LIKE THIS IN PRODUCTION`,
       signOptions: { expiresIn: "1h" }
     }),
   ],
