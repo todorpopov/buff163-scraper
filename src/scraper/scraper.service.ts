@@ -128,57 +128,61 @@ export class ScraperService {
         return itemsWithStickers
     }
     
-    @Cron("*/2 * * * *")
+    @Cron("*/1 * * * *")
     async getDataSse() {
         const items = await this.getOnlyItemsWithStickers() || [];
         this.asignItems(items)
-
-        if(items.length !== 0){
-            console.log(`Items assigned to SSE on: ${new Date()}`)
-        }
     }
 
-    // @Cron("1 */4 * * *")
-    async generalAvailability(){
-        const items = [...this.itemsArray]
+    // @Cron("1 */12 * * *")
+    async availability(){
+        const start = performance.now()
+        const arrayCopy = [...this.itemsArray]
 
-        let false_num = 0
-        for(let i = 0; i < items.length; i++){
-            const start = performance.now()
-            const statement = await this.checkItemAvailability(items[i].seller_profile_link)
-            await new Promise(resolve => setTimeout(resolve, 5000));
-            if(statement !== true){
-                items.splice(i, 1)
-                false_num++
-            }
-            const end = performance.now()
-            console.log(`Time to check and remove element: ${end - start}ms`)
-        }
+        const links = []
+        arrayCopy.forEach(item => {
+            links.push(item.seller_profile_link)
+        })
+
+        const availableItemsLinks = await this.checkItemsAvailability(links)
+
+        const remainingItems = []
+        arrayCopy.forEach(item => {
+            if(availableItemsLinks.includes(item.seller_profile_link))
+            remainingItems.push(item)
+        })
 
         this.clearItems()
-        this.asignItems(items)
-        console.log(`Items checked for availability on: ${new Date()}`)
-        return { msg: "Successfully removed unavailable items!"}
+        this.asignItems(remainingItems)
+        
+        const end = performance.now()
+        console.log(`Number of links that returned available: ${availableItemsLinks.length}`)
+        console.log(`Number of items: Pre(${arrayCopy.length}) | Post(${remainingItems.length})`)
+        console.log(`Time to check and remove elements: ${(end - start) / 1000}s`)
     }
 
-    async checkItemAvailability(link: string): Promise<boolean> {
+    async checkItemsAvailability(links: string[]): Promise<Array<string>> {
         const browser = await chromium.launch()
-        const page = await browser.newPage()
-        await page.goto(link)
-
-        let notVisible = true
-        try{
-            notVisible = await page.isVisible("div.nodata")
-        }catch (error) {
-            console.error(error)
-        }
-
-        if(!notVisible){
-            return true
-        }
         
+        let results = []
+        for(let i = 0; i < links.length; i++){
+            const start = performance.now()
+            const page = await browser.newPage()
+            await page.goto(links[i])
+
+            const statement = await page.isVisible("div.nodata")
+            
+            if(!statement){
+                results.push(links[i])
+            }
+
+            await page.close()
+            const end = performance.now()
+            console.log(`Time to check link: ${(end - start) / 1000}s`)
+        }
+
         await browser.close()
-        return false
+        return results
     }
     
 
@@ -203,7 +207,7 @@ export class ScraperService {
 
 
     statsArray = []
-    @Cron("*/5 * * * *")
+    @Cron("*/1 * * * *")
     async getStats(){
         const date = new Date()
 
