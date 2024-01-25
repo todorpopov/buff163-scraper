@@ -4,7 +4,6 @@ import { parseStickersPrices, getRandomItemCodes } from './external_functions';
 import { ReplaySubject } from 'rxjs';
 import { Cron } from '@nestjs/schedule';
 import { performance } from 'perf_hooks';
-import { cpuUsage } from 'process';
 
 const os = require('node-os-utils')
 
@@ -178,6 +177,7 @@ export class ScraperService {
             return true
         }
         
+        await browser.close()
         return false
     }
     
