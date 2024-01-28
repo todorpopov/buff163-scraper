@@ -133,13 +133,13 @@ export class ScraperService {
         return itemsWithStickers
     }
     
-    @Cron("*/5 * * * *")
+    @Cron("*/40 * * * * *")
     async getDataSse() {
         const items = await this.getOnlyItemsWithStickers() || [];
         this.asignItems(items)
     }
 
-    @Cron("1 */2 * * *")
+    //@Cron("1 */2 * * *")
     async availability(){
         const start = performance.now()
         const arrayCopy = [...this.itemsArray]
@@ -194,7 +194,7 @@ export class ScraperService {
     
 
 
-    itemsSubject = new ReplaySubject()
+    itemsSubject = new ReplaySubject(250, (1000 * 60 * 60 * 24))
     itemsArray = []
 
     asignItems(items: any[]): void {
@@ -207,14 +207,14 @@ export class ScraperService {
     @Cron("0 0 * * *")
     clearItems(): void {
         this.itemsSubject.complete()
-        this.itemsSubject = new ReplaySubject()
+        this.itemsSubject = new ReplaySubject(100, (1000 * 60 * 60 * 24))
         this.itemsArray = []
         console.log(`\nItems cleared on: ${new Date()}\n`)
     }
 
 
     statsArray = []
-    // @Cron("*/5 * * * *")
+    @Cron("*/5 * * * *")
     async getStats(){
         const date = new Date()
 
