@@ -83,7 +83,14 @@ export class ScraperService {
     
     async scrapeAllDetails(itemCode: string){
         const start = performance.now()
-        const browser = await chromium.launch()
+        let browser: Browser
+
+        try{
+            browser = await chromium.launch()
+
+        }catch(error){
+            console.log(error)
+        }
 
         const items = await this.scrapeItemsDetails(browser, itemCode) || []
         const stickerPrices = await this.scrapeStickersPrices(browser, itemCode) || []
@@ -133,7 +140,7 @@ export class ScraperService {
         return itemsWithStickers
     }
     
-    @Cron("*/40 * * * * *")
+    @Cron("*/1 * * * *")
     async getDataSse() {
         const items = await this.getOnlyItemsWithStickers() || [];
         this.asignItems(items)
@@ -167,18 +174,31 @@ export class ScraperService {
     }
 
     async checkItemsAvailability(links: string[]): Promise<Array<string>> {
-        const browser = await chromium.launch()
+        let browser: Browser
+        
+        try{
+            browser = await chromium.launch()
+
+        }catch(error){
+            console.log(error)
+        }
         
         let results = []
+        const page = await browser.newPage()
         for(let i = 0; i < links.length; i++){
             const start = performance.now()
-            const page = await browser.newPage()
             await page.goto(links[i])
 
-            const statement = await page.isVisible("div.nodata")
+            let statement = false 
+            try{
+                statement = await page.isVisible("div.nodata")
+
+            }catch(error){
+                console.log(error)
+            }
+
             await new Promise(resolve => setTimeout(resolve, 2000));
 
-            await page.close()
             
             if(!statement){
                 results.push(links[i])
@@ -187,6 +207,7 @@ export class ScraperService {
             const end = performance.now()
             console.log(`Time to check link: ${Math.round((end - start) / 1000)} s`)
         }
+        await page.close()
 
         await browser.close()
         return results
@@ -204,14 +225,13 @@ export class ScraperService {
         })
     }
     
-    @Cron("0 0 * * *")
+    //@Cron("0 0 * * *")
     clearItems(): void {
         this.itemsSubject.complete()
-        this.itemsSubject = new ReplaySubject(100, (1000 * 60 * 60 * 24))
+        this.itemsSubject = new ReplaySubject(250, (1000 * 60 * 60 * 24))
         this.itemsArray = []
         console.log(`\nItems cleared on: ${new Date()}\n`)
     }
-
 
     statsArray = []
     @Cron("*/5 * * * *")

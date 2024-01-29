@@ -4,7 +4,7 @@ import { Observable, filter } from 'rxjs';
 import { AuthGuard } from '../auth/auth.guard';
 import { stickerPriceFilter } from './external_functions';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { chromium } from 'playwright';
+import { chromium, Browser } from 'playwright';
 
 @ApiTags('scraper')
 @Controller('scraper')
@@ -15,7 +15,14 @@ export class ScraperController {
     // @UseGuards(AuthGuard)
     @Get('item/:itemCode')
     async scrapeItems(@Param('itemCode') itemCode: string) {
-        const browser = await chromium.launch()
+        let browser: Browser
+        
+        try{
+            browser = await chromium.launch()
+
+        }catch(error){
+            console.log(error)
+        }
         const result = await this.scraperService.scrapeItemsDetails(browser, itemCode)
         await browser.close()
 
@@ -26,7 +33,14 @@ export class ScraperController {
     // @UseGuards(AuthGuard)
     @Get('stickers/:itemCode')
     async getStickers(@Param('itemCode') itemCode: string) {
-        const browser = await chromium.launch()
+        let browser: Browser
+        
+        try{
+            browser = await chromium.launch()
+
+        }catch(error){
+            console.log(error)
+        }
         const result = await this.scraperService.scrapeStickersPrices(browser, itemCode)
         await browser.close()
 
