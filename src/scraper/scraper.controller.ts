@@ -59,8 +59,10 @@ export class ScraperController {
     // @UseGuards(AuthGuard)
     @Get("")
     async scrapeMultiplePages(){
-        const itemsList = await this.scraperService.scrapeMultiplePages()
-        return { items: itemsList }
+        // const itemsList = await this.scraperService.scrapeMultiplePages()
+        // return { items: itemsList }
+
+        this.scraperService.scrapeMultiplePages()
     }
 
     @ApiOperation({ summary: 'Scrapes multiple random item codes and returns only the ones with stickers' })

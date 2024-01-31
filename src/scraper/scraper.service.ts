@@ -133,7 +133,7 @@ export class ScraperService {
         return itemsWithStickers
     }
     
-    @Cron("*/1 * * * *")
+    //@Cron("*/1 * * * *")
     async getDataSse() {
         const items = await this.getOnlyItemsWithStickers() || [];
         this.asignItems(items)
@@ -220,7 +220,7 @@ export class ScraperService {
     }
 
     statsArray = []
-    @Cron("*/5 * * * *")
+    //@Cron("*/5 * * * *")
     async getStats(){
         const date = new Date()
 
