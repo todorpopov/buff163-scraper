@@ -83,14 +83,7 @@ export class ScraperService {
     
     async scrapeAllDetails(itemCode: string){
         const start = performance.now()
-        let browser: Browser
-
-        try{
-            browser = await chromium.launch()
-
-        }catch(error){
-            console.log(error)
-        }
+        const browser = await chromium.launch()
 
         const items = await this.scrapeItemsDetails(browser, itemCode) || []
         const stickerPrices = await this.scrapeStickersPrices(browser, itemCode) || []
@@ -174,14 +167,7 @@ export class ScraperService {
     }
 
     async checkItemsAvailability(links: string[]): Promise<Array<string>> {
-        let browser: Browser
-        
-        try{
-            browser = await chromium.launch()
-
-        }catch(error){
-            console.log(error)
-        }
+        const browser = await chromium.launch()
         
         let results = []
         const page = await browser.newPage()
