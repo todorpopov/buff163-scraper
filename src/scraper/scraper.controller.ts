@@ -63,6 +63,7 @@ export class ScraperController {
         // return { items: itemsList }
 
         this.scraperService.scrapeMultiplePages()
+        console.log("New process has been started!")
     }
 
     @ApiOperation({ summary: 'Scrapes multiple random item codes and returns only the ones with stickers' })
