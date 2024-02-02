@@ -1,23 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { getRandomItem } from './external_functions';
-import { ReplaySubject, windowTime } from 'rxjs';
+import { ReplaySubject } from 'rxjs';
 import { Cron } from '@nestjs/schedule';
+
 @Injectable()
 export class ScraperService {
-    @Cron("*/5 * * * * *")
+    @Cron("*/1 * * * * *")
     async scrapeRandomPage(){
         const start = performance.now()
 
         const randomItem = getRandomItem()
         const itemLink = `https://buff.163.com/api/market/goods/sell_order?game=csgo&goods_id=${randomItem.code}&page_num=1`
-        
-        const options = {
-            method: 'GET',
-            headers: {Accept: '*/*', 'User-Agent': 'Thunder Client (https://www.thunderclient.com)'}
-          };
           
-        let pageData: any = await fetch(itemLink, options).then(res => res.text()).catch(err => console.error('error - 1: ' + err));
+        let pageData: any = await fetch(itemLink, {method: 'GET'}).then(res => res.text()).catch(err => console.error('error - 1: ' + err));
         if(pageData[0] === "<"){
+            console.log(pageData)
             return
         }else{
             pageData = JSON.parse(pageData)
@@ -34,7 +31,7 @@ export class ScraperService {
 
                 const stickerName = "Sticker | " + sticker.name
                 const stickerLink = `https://stickers-server-adjsr.ondigitalocean.app/api/${stickerName}`
-                const info = await fetch(stickerLink, options).then(res => res.json()).catch(err => console.error('error - 2: ' + err))
+                const info = await fetch(stickerLink, {method: 'GET'}).then(res => res.json()).catch(err => console.error('error - 2: ' + err))
                 sticker.price = Number(info.price) || 0
             })
 
@@ -84,7 +81,7 @@ export class ScraperService {
     }
 
     statsObs = new ReplaySubject()
-    @Cron("*/1 * * * * *")
+    @Cron("*/30 * * * * *")
     async getStats(){
         const date = new Date()
 
