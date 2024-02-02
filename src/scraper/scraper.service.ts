@@ -16,10 +16,12 @@ export class ScraperService {
             headers: {Accept: '*/*', 'User-Agent': 'Thunder Client (https://www.thunderclient.com)'}
           };
           
-        const pageData = await fetch(itemLink, options)
-            .then(res => res.json())
-            .catch(err => console.error('error - 1: ' + err));
-        
+        let pageData: any = await fetch(itemLink, options).then(res => res.text()).catch(err => console.error('error - 1: ' + err));
+        if(pageData[0] === "<"){
+            return
+        }else{
+            pageData = JSON.parse(pageData)
+        }
         
         const itemsArray = pageData.data.items || []
         const results = []
