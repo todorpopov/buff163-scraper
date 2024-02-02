@@ -4,7 +4,7 @@ import { ReplaySubject, windowTime } from 'rxjs';
 import { Cron } from '@nestjs/schedule';
 @Injectable()
 export class ScraperService {
-    @Cron("*/1 * * * * *")
+    @Cron("*/5 * * * * *")
     async scrapeRandomPage(){
         const start = performance.now()
 
@@ -62,7 +62,7 @@ export class ScraperService {
     }
 
 
-    itemsSubject = new ReplaySubject(250, (1000 * 60 * 60 * 24))
+    itemsSubject = new ReplaySubject()
     itemsArray = []
     scrapingTime = []
 
@@ -76,7 +76,7 @@ export class ScraperService {
     @Cron("0 * * * *")
     clearItems(): void {
         this.itemsSubject.complete()
-        this.itemsSubject = new ReplaySubject(250, (1000 * 60 * 60 * 24))
+        this.itemsSubject = new ReplaySubject()
         this.itemsArray = []
         console.log(`\nItems cleared on: ${new Date()}\n`)
     }
