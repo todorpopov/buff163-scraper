@@ -4,7 +4,6 @@ import { Observable, filter } from 'rxjs';
 import { AuthGuard } from '../auth/auth.guard';
 import { stickerPriceFilter } from './external_functions';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { chromium } from 'playwright';
 
 @ApiTags('scraper')
 @Controller('scraper')
@@ -13,48 +12,10 @@ export class ScraperController {
 
     @ApiOperation({ summary: 'Scrapes a page by specifying an item code' })
     // @UseGuards(AuthGuard)
-    @Get('item/:itemCode')
-    async scrapeItems(@Param('itemCode') itemCode: string) {
-        const browser = await chromium.launch()
-        const result = await this.scraperService.scrapeItemsDetails(browser, itemCode)
-        await browser.close()
-
+    @Get('random_item')
+    async scrapeItems() {
+        const result = await this.scraperService.scrapeRandomPage()
         return result
-    }
-    
-    @ApiOperation({ summary: 'Scrapes the stickers prices on a page by specifying an item code' })
-    // @UseGuards(AuthGuard)
-    @Get('stickers/:itemCode')
-    async getStickers(@Param('itemCode') itemCode: string) {
-        const browser = await chromium.launch()
-        const result = await this.scraperService.scrapeStickersPrices(browser, itemCode)
-        await browser.close()
-
-        return result
-    }
-    
-    @ApiOperation({ summary: 'Scrapes the items details and stickers prices and combines the results' })
-    // @UseGuards(AuthGuard)
-    @Get("all/:itemCode")
-    async scrapeAllDetails(@Param('itemCode') itemCode: string){
-        const itemsList = await this.scraperService.scrapeAllDetails(itemCode)
-        return { items: itemsList }
-    }
-    
-    @ApiOperation({ summary: 'Scrapes item details and stickers prices of multiple, random item codes' })
-    // @UseGuards(AuthGuard)
-    @Get("")
-    async scrapeMultiplePages(){
-        const itemsList = await this.scraperService.scrapeMultiplePages()
-        return { items: itemsList }
-    }
-
-    @ApiOperation({ summary: 'Scrapes multiple random item codes and returns only the ones with stickers' })
-    // @UseGuards(AuthGuard)
-    @Get("only_with_stickers")
-    async getOnlyItemsWithStickers(){
-        const itemsList = await this.scraperService.getOnlyItemsWithStickers()
-        return { items: itemsList }
     }
 
     @ApiOperation({ summary: 'An observable SSE stream that consists of only items with stickers that meet certain criteria. Gets populated with data over time, as the cron restarts the scraper every 5 min' })
@@ -86,25 +47,10 @@ export class ScraperController {
         return { msg: "Items successfully cleared!" }
     }
 
-    @ApiOperation({ summary: 'Checks the availability of a single item. Link is passed in the body' })
-    // @UseGuards(AuthGuard)
-    @Get("is_available")
-    async checkAvailability(@Body() data: Record<string, any>){
-        return await this.scraperService.checkItemsAvailability(data.links)
-    }
-
-    @ApiOperation({ summary: 'Checks item availability' })
-    // @UseGuards(AuthGuard)
-    @Get("all_available")
-    async availability(){
-        this.scraperService.availability()
-        return { msg: "Item availability check has started!" }
-    }
-
     @ApiOperation({ summary: "Get server state statistics" })
     // @UseGuards(AuthGuard)
-    @Get("stats")
+    @Sse("stats")
     stats(){
-        return this.scraperService.statsArray
+        return this.scraperService.statsObs
     }
 }

@@ -44,25 +44,22 @@ export function parseFile(): any[]{
     return fileContent
 }
 
-export function getRandomItemCodes(numOfItems: number){
+export function getRandomItem(){
     const fileContent = parseFile()
 
-    const itemCodesArray = []
-    for(let i = 0; i < numOfItems; i++){
-        const randLine = randomNumber(0, fileContent.length)
-        const randItemCode = fileContent[randLine].code
-        if(!itemCodesArray.includes(randItemCode)){
-            itemCodesArray.push(randItemCode)
-        }
+    const randLine = randomNumber(0, fileContent.length)
+    const randomItem = {
+        code: fileContent[randLine].code,
+        name: fileContent[randLine].item_name
     }
 
-    return itemCodesArray
+    return randomItem
 }
 
 export function stickerPriceFilter(itemObject, targetPercantage): boolean {
     itemObject = itemObject || {}
 
-    const itemPrice = itemObject.buff163_price_cny;
+    const itemPrice = itemObject.price;
     let stickersTotal = 0;
 
     (itemObject.stickers || []).forEach(sticker => {
