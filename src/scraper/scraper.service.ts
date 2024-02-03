@@ -13,7 +13,7 @@ export class ScraperService {
         const itemLink = `https://buff.163.com/api/market/goods/sell_order?game=csgo&goods_id=${randomItem.code}&page_num=1`
           
         let pageData: any = await fetch(itemLink, {method: 'GET'}).then(res => res.text()).catch(err => console.error('error - 1: ' + err));
-        if(pageData[0] === "<"){
+        if(pageData[0] !== "{"){
             console.log(pageData)
             return
         }else{
