@@ -24,6 +24,7 @@ export class ScraperService {
         const results = []
         itemsArray.forEach(item => {
             const itemStickers = item.asset_info.info.stickers
+            if(itemStickers.length === 0){return}
             itemStickers.forEach(async(sticker) => {
                 delete sticker.img_url
                 delete sticker.category
