@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { getRandomItem } from './external_functions';
-import { ReplaySubject } from 'rxjs';
+import { ReplaySubject, queue } from 'rxjs';
 import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class ScraperService {
-    @Cron("*/1 * * * * *")
+    // @Cron("*/5 * * * * *")
     async scrapeRandomPage(){
         const start = performance.now()
 
@@ -58,6 +58,12 @@ export class ScraperService {
         const time = end - start
         this.scrapingTime.push(time)
         console.log(`---\nItem Code:${randomItem.code}\nTime to scrape item data: ${time} ms`)
+    }
+
+    async queue(){
+        while(true){
+            await this.scrapeRandomPage()
+        }
     }
 
 

@@ -53,4 +53,9 @@ export class ScraperController {
     stats(){
         return this.scraperService.statsObs
     }
+
+    @Get("start_queue")
+    queue(){
+        this.scraperService.queue()
+    }
 }
