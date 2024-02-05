@@ -10,15 +10,14 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 export class ScraperController {
     constructor(private readonly scraperService: ScraperService) {}
 
-    @ApiOperation({ summary: 'Scrapes a page by specifying an item code' })
+    @ApiOperation({ summary: 'Scrapes a random item page' })
     // @UseGuards(AuthGuard)
     @Get('random_item')
     async scrapeItems() {
-        const result = await this.scraperService.scrapeRandomPage()
-        return result
+        return await this.scraperService.scrapeRandomPage()
     }
 
-    @ApiOperation({ summary: 'An observable SSE stream that consists of only items with stickers that meet certain criteria. Gets populated with data over time, as the cron restarts the scraper every 5 min' })
+    @ApiOperation({ summary: 'An observable SSE stream for storing the scraped items' })
     // @UseGuards(AuthGuard)
     @Sse("stream/filter=:filter")
     getDataSse(@Param('filter') stickerFilter: string): Observable<any>{
@@ -28,7 +27,7 @@ export class ScraperController {
             return this.scraperService.itemsSubject.pipe(filter(item => stickerPriceFilter(item['data'], Number(stickerFilter))))
         }
     }
-    @ApiOperation({ summary: 'Returns the same items as the observable stream, but in a single request, instead of an SSE stream' })
+    @ApiOperation({ summary: 'Returns an array storing all scraped items' })
     // @UseGuards(AuthGuard)
     @Get("static/filter=:filter")
     getDataStatic(@Param('filter') stickerFilter: string){
@@ -57,5 +56,6 @@ export class ScraperController {
     @Get("start_queue")
     queue(){
         this.scraperService.queue()
+        return { msg: "Queue has been started!" }
     }
 }

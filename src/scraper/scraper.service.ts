@@ -5,7 +5,7 @@ import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class ScraperService {
-    // @Cron("*/5 * * * * *")
+    @Cron("*/5 * * * * *")
     async scrapeRandomPage(){
         const start = performance.now()
 
@@ -63,6 +63,7 @@ export class ScraperService {
     async queue(){
         while(true){
             await this.scrapeRandomPage()
+            await new Promise(resolve => setTimeout(resolve, 5000));
         }
     }
 
