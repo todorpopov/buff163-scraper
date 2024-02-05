@@ -31,7 +31,13 @@ export class ScraperService {
 
                 const stickerName = "Sticker | " + sticker.name
                 const stickerLink = `https://stickers-server-adjsr.ondigitalocean.app/api/${stickerName}`
-                const info = await fetch(stickerLink, {method: 'GET'}).then(res => res.json()).catch(err => console.error('error - 2: ' + err))
+                let info: any = await fetch(stickerLink, {method: 'GET'}).then(res => res.text()).catch(err => console.error('error - 2: ' + err))
+                if(info[0] !== "{"){
+                    console.log(info)
+                    return
+                }else{
+                    info = JSON.parse(info)
+                }
                 sticker.price = Number(info.price) || 0
             })
 
