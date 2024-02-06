@@ -53,9 +53,9 @@ export class ScraperController {
         return this.scraperService.statsObs
     }
 
-    @Get("start_queue")
-    queue(){
-        this.scraperService.queue()
+    @Get("start_queue/:items")
+    queue(@Param('items') items: string){
+        this.scraperService.queue(Number(items))
         return { msg: "Queue has been started!" }
     }
 }

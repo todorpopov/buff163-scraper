@@ -1,26 +1,36 @@
 import { Injectable } from '@nestjs/common';
-import { getRandomItem } from './external_functions';
-import { ReplaySubject, queue } from 'rxjs';
+import { getRandomItem, checkStickerCache } from './external_functions';
+import { ReplaySubject } from 'rxjs';
 import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class ScraperService {
-    @Cron("*/5 * * * * *")
+    // @Cron("*/1 * * * * *")
     async scrapeRandomPage(){
         const start = performance.now()
 
         const randomItem = getRandomItem()
         const itemLink = `https://buff.163.com/api/market/goods/sell_order?game=csgo&goods_id=${randomItem.code}&page_num=1`
-          
+        
+        this.numberOfPages++
+
         let pageData: any = await fetch(itemLink, {method: 'GET'}).then(res => res.text()).catch(err => console.error('error - 1: ' + err));
         if(pageData[0] !== "{"){
             console.log(pageData)
+            this.errors++
             return
         }else{
             pageData = JSON.parse(pageData)
         }
         
-        const itemsArray = pageData.data.items || []
+        let itemsArray
+        try{
+            itemsArray = pageData.data.items
+        }catch(err){
+            console.log(err)
+            return
+        }
+
         const results = []
         itemsArray.forEach(item => {
             const itemStickers = item.asset_info.info.stickers
@@ -42,6 +52,7 @@ export class ScraperService {
                 sticker.price = Number(info.price) || 0
             })
 
+
             let itemName = randomItem.name
             if(itemName.includes('StatTrak')){
                 itemName = itemName.slice(10)
@@ -60,24 +71,29 @@ export class ScraperService {
             results.push(newItemObject)
         })
 
+
         this.asignItems(results)
         const end = performance.now()
         const time = end - start
         this.scrapingTime.push(time)
-        console.log(`---\nItem Code:${randomItem.code}\nTime to scrape item data: ${time} ms`)
+        console.log(`---\nItem Code: ${randomItem.code}\nTime to scrape item data: ${time.toFixed(2)} ms`)
     }
 
-    async queue(){
-        while(true){
+    async queue(items: number){
+        console.log(`New queue (${items}) has been started!`)
+        for(let i = 0; i < items; i++){
             await this.scrapeRandomPage()
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            //await new Promise(resolve => setTimeout(resolve, 750));
         }
     }
 
 
     itemsSubject = new ReplaySubject()
     itemsArray = []
+
     scrapingTime = []
+    errors = 0
+    numberOfPages = 0
 
     asignItems(items: any[]): void {
         items.forEach(item => {
@@ -86,24 +102,31 @@ export class ScraperService {
         })
     }
     
-    @Cron("0 * * * *")
+    @Cron("*/10 * * * *")
     clearItems(): void {
         this.itemsSubject.complete()
         this.itemsSubject = new ReplaySubject()
         this.itemsArray = []
-        console.log(`\nItems cleared on: ${new Date()}\n`)
+
+        this.statsObs.complete()
+        this.statsObs = new ReplaySubject()
+        this.scrapingTime = []
+        this.errors = 0
+        this.numberOfPages = 0
+
+        console.log(`\nItems and Logs cleared on: ${new Date()}\n`)
     }
 
     statsObs = new ReplaySubject()
     @Cron("*/30 * * * * *")
     async getStats(){
-        const date = new Date()
-
         const stats = { 
             number_of_items: this.itemsArray.length,
-            average_scrape_time: this.scrapingTime.reduce((a, b) => a + b, 0) / this.scrapingTime.length
+            pages_scraped: this.numberOfPages,
+            average_scrape_time_ms: (this.scrapingTime.reduce((a, b) => a + b, 0) / this.scrapingTime.length).toFixed(2),
+            errors: this.errors
         }
 
-        this.statsObs.next({time: `${date.getHours()}:${date.getMinutes()}`,data: stats})
+        this.statsObs.next({data: stats})
     }
 }
