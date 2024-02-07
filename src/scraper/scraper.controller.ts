@@ -56,6 +56,12 @@ export class ScraperController {
     @Get("start_queue/:items")
     queue(@Param('items') items: string){
         this.scraperService.queue(Number(items))
-        return { msg: "Queue has been started!" }
+        return { msg: `Queue (${items}) has been started!` }
+    }
+
+    @Get("start_queues/:number/:len")
+    multipleQueues(@Param('number') number: string, @Param('len') len: string){
+        this.scraperService.startMultipleQueues(Number(number), Number(len))
+        return { msg: `${number} queues of length ${len} have been started!` }
     }
 }

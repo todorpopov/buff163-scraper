@@ -76,14 +76,24 @@ export class ScraperService {
         const end = performance.now()
         const time = end - start
         this.scrapingTime.push(time)
-        console.log(`---\nItem Code: ${randomItem.code}\nTime to scrape item data: ${time.toFixed(2)} ms`)
+        //console.log(`---\nItem Code: ${randomItem.code}\nTime to scrape item data: ${time.toFixed(2)} ms`)
     }
 
-    async queue(items: number){
-        console.log(`New queue (${items}) has been started!`)
-        for(let i = 0; i < items; i++){
+    async queue(len: number){
+        const start = performance.now()
+        console.log(`New queue (${len} items) has been started!`)
+
+        for(let i = 0; i < len; i++){
             await this.scrapeRandomPage()
             //await new Promise(resolve => setTimeout(resolve, 750));
+        }
+        const end = performance.now()
+        console.log(`Time to iterate over ${len} items: ${(end - start).toFixed(2)} ms`)
+    }
+
+    startMultipleQueues(num: number, len: number){
+        for(let i = 0; i < num; i++){
+            this.queue(len)
         }
     }
 
