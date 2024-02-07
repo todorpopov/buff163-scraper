@@ -102,10 +102,10 @@ export class ScraperService {
         this.itemsNum++
     }
     
-    @Cron("*/5 * * * *")
+    @Cron("0 * * * *")
     clearItems(): void {
         this.itemsSubject.complete()
-        this.itemsSubject = new ReplaySubject()
+        this.itemsSubject = new ReplaySubject() 
         this.itemsNum = 0
 
         this.statsObs.complete()
