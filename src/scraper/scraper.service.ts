@@ -5,7 +5,7 @@ import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class ScraperService {
-    // @Cron("*/1 * * * * *")
+    // @Cron("*/2 * * * * *")
     async scrapeRandomPage(){
         const start = performance.now()
         this.numberOfPages++
@@ -102,12 +102,11 @@ export class ScraperService {
         this.itemsNum++
     }
     
-    // @Cron("*/30 * * * *")
+    @Cron("*/30 * * * *")
     clearItems(): void {
         this.itemsSubject.complete()
         this.itemsSubject = new ReplaySubject()
         this.itemsNum = 0
-        // this.stickerCache = []
 
         this.statsObs.complete()
         this.statsObs = new ReplaySubject()
