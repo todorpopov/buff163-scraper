@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Sse, UseGuards, Body } from '@nestjs/common';
+import { Controller, Get, Param, Sse, UseGuards, Post } from '@nestjs/common';
 import { ScraperService } from './scraper.service';
 import { Observable, filter } from 'rxjs';
 import { AuthGuard } from '../auth/auth.guard';
@@ -27,15 +27,29 @@ export class ScraperController {
             return this.scraperService.itemsSubject.pipe(filter(item => stickerPriceFilter(item['data'], Number(stickerFilter))))
         }
     }
-    @ApiOperation({ summary: 'Returns an array storing all scraped items' })
+    
+    @ApiOperation({ summary: "Return an array of the cached stickers" })
     // @UseGuards(AuthGuard)
-    @Get("static/filter=:filter")
-    getDataStatic(@Param('filter') stickerFilter: string){
-        if(!stickerFilter.match("[1-9][0-9]*")){
-            return this.scraperService.itemsArray
-        }else{
-            return this.scraperService.itemsArray.filter((item) => stickerPriceFilter(item, Number(stickerFilter)))
-        }
+    @Get("fetch_stickers")
+    async cachedStickers(){
+        await this.scraperService.fetchStickerPrices()
+        return {msg: "Successfully fetched current sticker prices!"} 
+    }
+
+    @ApiOperation({ summary: "Start a queue of length 'items'" })
+    // @UseGuards(AuthGuard)
+    @Get("start_queue/:items")
+    queue(@Param('items') items: string){
+        this.scraperService.queue(Number(items))
+        return { msg: `Queue (length ${items}) has been started!` }
+    }
+
+    @ApiOperation({ summary: "Starts 'num' number of queues of length 'len'" })
+    // @UseGuards(AuthGuard)
+    @Get("start_queues/:num/:len")
+    multipleQueues(@Param('num') num: string, @Param('len') len: string){
+        this.scraperService.startMultipleQueues(Number(num), Number(len))
+        return { msg: `${num} queues of length ${len} have been started!` }
     }
 
     @ApiOperation({ summary: 'Clears all data from the observable and the array' })
@@ -45,23 +59,11 @@ export class ScraperController {
         this.scraperService.clearItems()
         return { msg: "Items successfully cleared!" }
     }
-
+    
     @ApiOperation({ summary: "Get server stats" })
     // @UseGuards(AuthGuard)
     @Sse("stats")
     stats(){
         return this.scraperService.statsObs
-    }
-
-    @Get("start_queue/:items")
-    queue(@Param('items') items: string){
-        this.scraperService.queue(Number(items))
-        return { msg: `Queue (${items}) has been started!` }
-    }
-
-    @Get("start_queues/:number/:len")
-    multipleQueues(@Param('number') number: string, @Param('len') len: string){
-        this.scraperService.startMultipleQueues(Number(number), Number(len))
-        return { msg: `${number} queues of length ${len} have been started!` }
     }
 }

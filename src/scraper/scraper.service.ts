@@ -8,11 +8,10 @@ export class ScraperService {
     // @Cron("*/1 * * * * *")
     async scrapeRandomPage(){
         const start = performance.now()
+        this.numberOfPages++
 
         const randomItem = getRandomItem()
         const itemLink = `https://buff.163.com/api/market/goods/sell_order?game=csgo&goods_id=${randomItem.code}&page_num=1`
-        
-        this.numberOfPages++
 
         let pageData: any = await fetch(itemLink, {method: 'GET'}).then(res => res.text()).catch(err => console.error('error - 1: ' + err));
         if(pageData[0] !== "{"){
@@ -23,7 +22,7 @@ export class ScraperService {
             pageData = JSON.parse(pageData)
         }
         
-        let itemsArray
+        let itemsArray: any[]
         try{
             itemsArray = pageData.data.items
         }catch(err){
@@ -31,25 +30,15 @@ export class ScraperService {
             return
         }
 
-        const results = []
         itemsArray.forEach(item => {
             const itemStickers = item.asset_info.info.stickers
             if(itemStickers.length === 0){return}
+            
             itemStickers.forEach(async(sticker) => {
                 delete sticker.img_url
                 delete sticker.category
                 delete sticker.sticker_id
-
-                const stickerName = "Sticker | " + sticker.name
-                const stickerLink = `https://stickers-server-adjsr.ondigitalocean.app/api/${stickerName}`
-                let info: any = await fetch(stickerLink, {method: 'GET'}).then(res => res.text()).catch(err => console.error('error - 2: ' + err))
-                if(info[0] !== "{"){
-                    console.log(info)
-                    return
-                }else{
-                    info = JSON.parse(info)
-                }
-                sticker.price = Number(info.price) || 0
+                sticker.price = checkStickerCache(this.stickerCache, `Sticker | ${sticker.name}`)
             })
 
 
@@ -68,15 +57,19 @@ export class ScraperService {
                 paintwear: item.asset_info.paintwear
             }
 
-            results.push(newItemObject)
+            this.asignItem(newItemObject)
         })
 
-
-        this.asignItems(results)
         const end = performance.now()
-        const time = end - start
-        this.scrapingTime.push(time)
-        //console.log(`---\nItem Code: ${randomItem.code}\nTime to scrape item data: ${time.toFixed(2)} ms`)
+        this.scrapingTime.push((end - start))
+    }
+    
+    stickerCache = []
+    @Cron("*/1 * * * *")
+    async fetchStickerPrices(){
+        const stickerURI = "https://stickers-server-adjsr.ondigitalocean.app/array"
+        this.stickerCache = await fetch(stickerURI, {method: 'GET'}).then(res => res.json()).catch(err => console.error('error - stickers fetch: ' + err))
+        console.log("Fetched latest stickers")
     }
 
     async queue(len: number){
@@ -97,26 +90,24 @@ export class ScraperService {
         }
     }
 
-
     itemsSubject = new ReplaySubject()
-    itemsArray = []
+    itemsNum = 0
 
     scrapingTime = []
     errors = 0
     numberOfPages = 0
 
-    asignItems(items: any[]): void {
-        items.forEach(item => {
-            this.itemsSubject.next({data: item})
-            this.itemsArray.push(item)
-        })
+    asignItem(item: any): void {
+        this.itemsSubject.next({data: item})
+        this.itemsNum++
     }
     
-    @Cron("*/10 * * * *")
+    // @Cron("*/30 * * * *")
     clearItems(): void {
         this.itemsSubject.complete()
         this.itemsSubject = new ReplaySubject()
-        this.itemsArray = []
+        this.itemsNum = 0
+        // this.stickerCache = []
 
         this.statsObs.complete()
         this.statsObs = new ReplaySubject()
@@ -128,13 +119,13 @@ export class ScraperService {
     }
 
     statsObs = new ReplaySubject()
-    @Cron("*/30 * * * * *")
+    @Cron("*/1 * * * *")
     async getStats(){
         const stats = { 
-            number_of_items: this.itemsArray.length,
+            number_of_items: this.itemsNum,
             pages_scraped: this.numberOfPages,
             average_scrape_time_ms: (this.scrapingTime.reduce((a, b) => a + b, 0) / this.scrapingTime.length).toFixed(2),
-            errors: this.errors
+            errors: this.errors,
         }
 
         this.statsObs.next({data: stats})
