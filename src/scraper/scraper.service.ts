@@ -5,7 +5,7 @@ import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class ScraperService {
-    // @Cron("*/2 * * * * *")
+    @Cron("*/1 * * * * *")
     async scrapeRandomPage(){
         const start = performance.now()
         this.numberOfPages++
@@ -53,7 +53,7 @@ export class ScraperService {
                 price: Number(item.price),
                 number_of_stickers: itemStickers.length,
                 stickers: itemStickers,
-                seller_profile_link: `https://buff.163.com/shop/${item.user_id}#tab=selling&game=csgo&page_num=1&search=${itemName.replaceAll(' ', '%20')}`,
+                item_offer_url: `https://buff.163.com/shop/${item.user_id}#tab=selling&game=csgo&page_num=1&search=${itemName.replaceAll(' ', '%20')}`,
                 paintwear: item.asset_info.paintwear
             }
 
@@ -78,7 +78,7 @@ export class ScraperService {
 
         for(let i = 0; i < len; i++){
             await this.scrapeRandomPage()
-            //await new Promise(resolve => setTimeout(resolve, 750));
+            // await new Promise(resolve => setTimeout(resolve, 600))
         }
         const end = performance.now()
         console.log(`Time to iterate over ${len} items: ${(end - start).toFixed(2)} ms`)
@@ -102,7 +102,7 @@ export class ScraperService {
         this.itemsNum++
     }
     
-    @Cron("*/30 * * * *")
+    @Cron("*/5 * * * *")
     clearItems(): void {
         this.itemsSubject.complete()
         this.itemsSubject = new ReplaySubject()

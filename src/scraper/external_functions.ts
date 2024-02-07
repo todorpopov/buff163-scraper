@@ -78,8 +78,7 @@ export function stickerPriceFilter(itemObject, targetPercantage): boolean {
 }
 
 export function checkStickerCache(array, name){
-    const arrayCopy = [...array]
-    for(const item of arrayCopy){
+    for(const item of array){
         if(item.name === name){
             return Number(item.price)
         }
