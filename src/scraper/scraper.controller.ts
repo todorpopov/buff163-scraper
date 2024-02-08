@@ -10,13 +10,6 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 export class ScraperController {
     constructor(private readonly scraperService: ScraperService) {}
 
-    @ApiOperation({ summary: 'Scrapes a random item page' })
-    // @UseGuards(AuthGuard)
-    @Get('random_item')
-    async scrapeItems() {
-        return await this.scraperService.scrapeRandomPage()
-    }
-
     @ApiOperation({ summary: 'An observable SSE stream for storing the scraped items' })
     // @UseGuards(AuthGuard)
     @Sse("stream/filter=:filter")

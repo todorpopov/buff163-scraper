@@ -1,14 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { getRandomItem, checkStickerCache } from './external_functions';
-import { ReplaySubject } from 'rxjs';
+import { getRandomItem, checkStickerCache, stickerPriceFilter } from './external_functions';
+import { ReplaySubject, concat, filter, of } from 'rxjs';
 import { Cron } from '@nestjs/schedule';
 const os = require('os')
 
 @Injectable()
 export class ScraperService {
-    @Cron("*/2 * * * * *")
+    @Cron("*/1 * * * * *")
     async scrapeRandomPage(){
         const start = performance.now()
+
+        if(this.stickerCache.length === 0){
+            await this.fetchStickerPrices()
+            return
+        }
+
         this.numberOfPages++
 
         const randomItem = getRandomItem()
@@ -66,7 +72,6 @@ export class ScraperService {
     }
     
     stickerCache = []
-    @Cron("*/1 * * * *")
     async fetchStickerPrices(){
         const stickerURI = "https://stickers-server-adjsr.ondigitalocean.app/array"
         this.stickerCache = await fetch(stickerURI, {method: 'GET'}).then(res => res.json()).catch(err => console.error('error - stickers fetch: ' + err))
@@ -79,7 +84,6 @@ export class ScraperService {
 
         for(let i = 0; i < len; i++){
             await this.scrapeRandomPage()
-            // await new Promise(resolve => setTimeout(resolve, 600))
         }
         const end = performance.now()
         console.log(`Time to iterate over ${len} items: ${(end - start).toFixed(2)} ms`)
@@ -91,9 +95,9 @@ export class ScraperService {
         }
     }
 
-    // async scheduleQueue(){
-    //     await this.queue(80)
-    // }
+    async scheduleQueue(){
+        await this.queue(80)
+    }
 
     itemsSubject = new ReplaySubject()
     itemsNum = 0
@@ -107,10 +111,11 @@ export class ScraperService {
         this.itemsNum++
     }
     
-    // @Cron("*/30 * * * *")
     clearItems(): void {
         this.itemsSubject.complete()
-        this.itemsSubject = new ReplaySubject() 
+        this.itemsSubject = new ReplaySubject()
+        // const tempObs = this.itemsSubject.pipe(filter(item => stickerPriceFilter(item['data'], 500)))
+        // this.itemsSubject = tempObs
 
         this.itemsNum = 0
 
