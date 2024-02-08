@@ -90,7 +90,9 @@ export class ScraperService {
         }
     }
 
-    itemsSubject = new ReplaySubject()
+    // itemsSubject = new ReplaySubject()
+    itemsArray = []
+
     itemsNum = 0
 
     scrapingTime = []
@@ -98,18 +100,24 @@ export class ScraperService {
     numberOfPages = 0
 
     asignItem(item: any): void {
-        this.itemsSubject.next({data: item})
+        // this.itemsSubject.next({data: item})
+        this.itemsArray.push(item)
+
         this.itemsNum++
     }
     
     @Cron("0 * * * *")
     clearItems(): void {
-        this.itemsSubject.complete()
-        this.itemsSubject = new ReplaySubject() 
+        // this.itemsSubject.complete()
+        // this.itemsSubject = new ReplaySubject() 
+        this.itemsArray = []
+
         this.itemsNum = 0
 
-        this.statsObs.complete()
-        this.statsObs = new ReplaySubject()
+        // this.statsObs.complete()
+        // this.statsObs = new ReplaySubject()
+        this.statsArray = []
+
         this.scrapingTime = []
         this.errors = 0
         this.numberOfPages = 0
@@ -117,7 +125,8 @@ export class ScraperService {
         console.log(`\nItems and Logs cleared on: ${new Date()}\n`)
     }
 
-    statsObs = new ReplaySubject()
+    // statsObs = new ReplaySubject()
+    statsArray = []
     @Cron("*/1 * * * *")
     async getStats(){
         const stats = { 
@@ -127,6 +136,7 @@ export class ScraperService {
             errors: this.errors,
         }
 
-        this.statsObs.next({data: stats})
+        // this.statsObs.next({data: stats})
+        this.statsArray.push(stats)
     }
 }

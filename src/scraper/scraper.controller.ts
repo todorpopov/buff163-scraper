@@ -17,14 +17,22 @@ export class ScraperController {
         return await this.scraperService.scrapeRandomPage()
     }
 
-    @ApiOperation({ summary: 'An observable SSE stream for storing the scraped items' })
-    // @UseGuards(AuthGuard)
-    @Sse("stream/filter=:filter")
-    getDataSse(@Param('filter') stickerFilter: string): Observable<any>{
+    // @ApiOperation({ summary: 'An observable SSE stream for storing the scraped items' })
+    // // @UseGuards(AuthGuard)
+    // @Sse("stream/filter=:filter")
+    // getDataSse(@Param('filter') stickerFilter: string){
+    //     if(!stickerFilter.match("[1-9][0-9]*")){
+    //         return this.scraperService.itemsSubject
+    //     }else {
+    //         return this.scraperService.itemsSubject.pipe(filter(item => stickerPriceFilter(item['data'], Number(stickerFilter))))
+    //     }
+    // }
+    @Get("array/filter=:filter")
+    getDataArray(@Param('filter') stickerFilter: string){
         if(!stickerFilter.match("[1-9][0-9]*")){
-            return this.scraperService.itemsSubject
+            return this.scraperService.itemsArray
         }else {
-            return this.scraperService.itemsSubject.pipe(filter(item => stickerPriceFilter(item['data'], Number(stickerFilter))))
+            return this.scraperService.itemsArray.reduce(item => stickerPriceFilter(item['data'], Number(stickerFilter)))
         }
     }
     
@@ -60,10 +68,15 @@ export class ScraperController {
         return { msg: "Items successfully cleared!" }
     }
     
-    @ApiOperation({ summary: "Get server stats" })
-    // @UseGuards(AuthGuard)
-    @Sse("stats")
+    // @ApiOperation({ summary: "Get server stats" })
+    // // @UseGuards(AuthGuard)
+    // @Sse("stats")
+    // stats(){
+    //     return this.scraperService.statsObs
+    // }
+
+    @Get("stats")
     stats(){
-        return this.scraperService.statsObs
+        return this.scraperService.statsArray
     }
 }
