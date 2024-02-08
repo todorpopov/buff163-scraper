@@ -83,3 +83,9 @@ export function checkStickerCache(array, name){
     }
     return 0
 }
+
+export async function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
+}

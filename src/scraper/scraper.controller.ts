@@ -29,11 +29,11 @@ export class ScraperController {
         return {msg: "Successfully fetched current sticker prices!"} 
     }
 
-    @ApiOperation({ summary: "Start a queue of length 'items'" })
+    @ApiOperation({ summary: "Start a queue of length 'items'. 'delay' is used to prevent 429 requests" })
     // @UseGuards(AuthGuard)
-    @Get("start_queue/:items")
-    queue(@Param('items') items: string){
-        this.scraperService.queue(Number(items))
+    @Get("start_queue/:items/:delay")
+    queue(@Param('items') items: string, @Param('delay') delay: string){
+        this.scraperService.queue(Number(items), Number(delay))
         return { msg: `Queue (length ${items}) has been started!` }
     }
 

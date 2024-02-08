@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { getRandomItem, checkStickerCache, parseFile } from './external_functions';
+import { getRandomItem, checkStickerCache, parseFile, sleep } from './external_functions';
 import { ReplaySubject } from 'rxjs';
 const os = require('os')
 
@@ -82,16 +82,17 @@ export class ScraperService {
     async fetchStickerPrices(){
         const stickerURI = "https://stickers-server-adjsr.ondigitalocean.app/array"
         this.stickerCache = await fetch(stickerURI, {method: 'GET'}).then(res => res.json()).catch(err => console.error('error - stickers fetch: ' + err))
-        console.log("Fetched latest stickers")
+        console.log("Fetched latest stickers!")
     }
 
 
-    async queue(len: number){
+    async queue(len: number, delay: number){
         const start = performance.now()
-        console.log(`New queue (${len} items) has been started!`)
+        console.log(`New queue (${len} items), and sleep (${delay}) has been started!`)
 
         for(let i = 0; i < len; i++){
             await this.scrapeRandomPage()
+            await sleep(delay)
             if(i % 10 === 0){
                 this.getStats()
             }
@@ -102,12 +103,8 @@ export class ScraperService {
 
     startMultipleQueues(num: number, len: number){
         for(let i = 0; i < num; i++){
-            this.queue(len)
+            this.queue(len, 1000)
         }
-    }
-
-    async scheduleQueue(){
-        await this.queue(80)
     }
 
 
