@@ -2,10 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { getRandomItem, checkStickerCache } from './external_functions';
 import { ReplaySubject } from 'rxjs';
 import { Cron } from '@nestjs/schedule';
+const os = require('os')
 
 @Injectable()
 export class ScraperService {
-    // @Cron("*/1 * * * * *")
+    @Cron("*/2 * * * * *")
     async scrapeRandomPage(){
         const start = performance.now()
         this.numberOfPages++
@@ -90,10 +91,9 @@ export class ScraperService {
         }
     }
 
-    //@Cron("*/1 * * * *")
-    async scheduleQueue(){
-        await this.queue(80)
-    }
+    // async scheduleQueue(){
+    //     await this.queue(80)
+    // }
 
     itemsSubject = new ReplaySubject()
     itemsNum = 0
@@ -107,15 +107,14 @@ export class ScraperService {
         this.itemsNum++
     }
     
-    @Cron("*/30 * * * *")
+    // @Cron("*/30 * * * *")
     clearItems(): void {
         this.itemsSubject.complete()
         this.itemsSubject = new ReplaySubject() 
 
         this.itemsNum = 0
 
-        this.statsObs.complete()
-        this.statsObs = new ReplaySubject()
+        this.statsArray = []
 
         this.scrapingTime = []
         this.errors = 0
@@ -124,16 +123,27 @@ export class ScraperService {
         console.log(`\nItems and Logs cleared on: ${new Date()}\n`)
     }
 
-    statsObs = new ReplaySubject()
-    @Cron("*/1 * * * *")
+    statsArray = []
+    @Cron("*/5 * * * * *")
     async getStats(){
+        const freeMemory = Math.round(os.freemem() / 1024 / 1024)
+        const totalMemory = Math.round(os.totalmem() / 1024 / 1024)
+        const memoryPercetage = (freeMemory / totalMemory) * 100
+
+        if(memoryPercetage < 10){
+            this.clearItems()
+        }
+
         const stats = { 
             number_of_items: this.itemsNum,
             pages_scraped: this.numberOfPages,
             average_scrape_time_ms: (this.scrapingTime.reduce((a, b) => a + b, 0) / this.scrapingTime.length).toFixed(2),
             errors: this.errors,
+            free_memory: freeMemory,
+            free_memory_percentage: memoryPercetage,
+            total_memory: totalMemory
         }
 
-        this.statsObs.next({data: stats})
+        this.statsArray.push(stats)
     }
 }
