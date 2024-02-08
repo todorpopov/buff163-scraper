@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { getRandomItem, checkStickerCache } from './external_functions';
+import { getRandomItem, checkStickerCache, parseFile } from './external_functions';
 import { ReplaySubject } from 'rxjs';
 const os = require('os')
 
@@ -8,14 +8,17 @@ export class ScraperService {
     async scrapeRandomPage(){
         const start = performance.now()
 
+        if(this.fileContent.length === 0){
+            this.getFileContent()
+        }
+
         if(this.stickerCache.length === 0){
             await this.fetchStickerPrices()
-            return
         }
 
         this.numberOfPages++
 
-        const randomItem = getRandomItem()
+        const randomItem = getRandomItem(this.fileContent)
         const itemLink = `https://buff.163.com/api/market/goods/sell_order?game=csgo&goods_id=${randomItem.code}&page_num=1`
 
         let pageData: any = await fetch(itemLink, {method: 'GET'}).then(res => res.text()).catch(err => console.error('error - 1: ' + err));
@@ -69,6 +72,11 @@ export class ScraperService {
         this.scrapingTime.push((end - start))
     }
     
+    fileContent = []
+    getFileContent(){
+        this.fileContent = parseFile()
+        console.log("File content has been parsed!")
+    }
 
     stickerCache = []
     async fetchStickerPrices(){

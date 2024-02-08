@@ -44,9 +44,7 @@ export function parseFile(): any[]{
     return fileContent
 }
 
-export function getRandomItem(){
-    const fileContent = parseFile()
-
+export function getRandomItem(fileContent){
     const randLine = randomNumber(0, fileContent.length)
     const randomItem = {
         code: fileContent[randLine].code,
