@@ -1,12 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { getRandomItem, checkStickerCache, stickerPriceFilter } from './external_functions';
-import { ReplaySubject, concat, filter, of } from 'rxjs';
-import { Cron } from '@nestjs/schedule';
+import { getRandomItem, checkStickerCache } from './external_functions';
+import { ReplaySubject } from 'rxjs';
 const os = require('os')
 
 @Injectable()
 export class ScraperService {
-    @Cron("*/1 * * * * *")
     async scrapeRandomPage(){
         const start = performance.now()
 
@@ -71,6 +69,7 @@ export class ScraperService {
         this.scrapingTime.push((end - start))
     }
     
+
     stickerCache = []
     async fetchStickerPrices(){
         const stickerURI = "https://stickers-server-adjsr.ondigitalocean.app/array"
@@ -78,12 +77,16 @@ export class ScraperService {
         console.log("Fetched latest stickers")
     }
 
+
     async queue(len: number){
         const start = performance.now()
         console.log(`New queue (${len} items) has been started!`)
 
         for(let i = 0; i < len; i++){
             await this.scrapeRandomPage()
+            if(i % 10 === 0){
+                this.getStats()
+            }
         }
         const end = performance.now()
         console.log(`Time to iterate over ${len} items: ${(end - start).toFixed(2)} ms`)
@@ -98,6 +101,7 @@ export class ScraperService {
     async scheduleQueue(){
         await this.queue(80)
     }
+
 
     itemsSubject = new ReplaySubject()
     itemsNum = 0
@@ -114,8 +118,6 @@ export class ScraperService {
     clearItems(): void {
         this.itemsSubject.complete()
         this.itemsSubject = new ReplaySubject()
-        // const tempObs = this.itemsSubject.pipe(filter(item => stickerPriceFilter(item['data'], 500)))
-        // this.itemsSubject = tempObs
 
         this.itemsNum = 0
 
@@ -128,9 +130,9 @@ export class ScraperService {
         console.log(`\nItems and Logs cleared on: ${new Date()}\n`)
     }
 
+
     statsArray = []
-    @Cron("*/5 * * * * *")
-    async getStats(){
+    getStats(){
         const freeMemory = Math.round(os.freemem() / 1024 / 1024)
         const totalMemory = Math.round(os.totalmem() / 1024 / 1024)
         const memoryPercetage = (freeMemory / totalMemory) * 100
