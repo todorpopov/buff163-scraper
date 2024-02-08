@@ -1,6 +1,6 @@
-import { Controller, Get, Param, Sse, UseGuards, Post } from '@nestjs/common';
+import { Controller, Get, Param, Sse, UseGuards } from '@nestjs/common';
 import { ScraperService } from './scraper.service';
-import { Observable, filter } from 'rxjs';
+import { filter } from 'rxjs';
 import { AuthGuard } from '../auth/auth.guard';
 import { stickerPriceFilter } from './external_functions';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -17,22 +17,14 @@ export class ScraperController {
         return await this.scraperService.scrapeRandomPage()
     }
 
-    // @ApiOperation({ summary: 'An observable SSE stream for storing the scraped items' })
-    // // @UseGuards(AuthGuard)
-    // @Sse("stream/filter=:filter")
-    // getDataSse(@Param('filter') stickerFilter: string){
-    //     if(!stickerFilter.match("[1-9][0-9]*")){
-    //         return this.scraperService.itemsSubject
-    //     }else {
-    //         return this.scraperService.itemsSubject.pipe(filter(item => stickerPriceFilter(item['data'], Number(stickerFilter))))
-    //     }
-    // }
-    @Get("array/filter=:filter")
-    getDataArray(@Param('filter') stickerFilter: string){
+    @ApiOperation({ summary: 'An observable SSE stream for storing the scraped items' })
+    // @UseGuards(AuthGuard)
+    @Sse("stream/filter=:filter")
+    getDataSse(@Param('filter') stickerFilter: string){
         if(!stickerFilter.match("[1-9][0-9]*")){
-            return this.scraperService.itemsArray
+            return this.scraperService.itemsSubject
         }else {
-            return this.scraperService.itemsArray.reduce(item => stickerPriceFilter(item['data'], Number(stickerFilter)))
+            return this.scraperService.itemsSubject.pipe(filter(item => stickerPriceFilter(item['data'], Number(stickerFilter))))
         }
     }
     
@@ -68,15 +60,10 @@ export class ScraperController {
         return { msg: "Items successfully cleared!" }
     }
     
-    // @ApiOperation({ summary: "Get server stats" })
-    // // @UseGuards(AuthGuard)
-    // @Sse("stats")
-    // stats(){
-    //     return this.scraperService.statsObs
-    // }
-
-    @Get("stats")
+    @ApiOperation({ summary: "Get server stats" })
+    // @UseGuards(AuthGuard)
+    @Sse("stats")
     stats(){
-        return this.scraperService.statsArray
+        return this.scraperService.statsObs
     }
 }

@@ -5,7 +5,7 @@ import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class ScraperService {
-    @Cron("*/1 * * * * *")
+    // @Cron("*/1 * * * * *")
     async scrapeRandomPage(){
         const start = performance.now()
         this.numberOfPages++
@@ -90,9 +90,12 @@ export class ScraperService {
         }
     }
 
-    // itemsSubject = new ReplaySubject()
-    itemsArray = []
+    //@Cron("*/1 * * * *")
+    async scheduleQueue(){
+        await this.queue(80)
+    }
 
+    itemsSubject = new ReplaySubject()
     itemsNum = 0
 
     scrapingTime = []
@@ -100,23 +103,19 @@ export class ScraperService {
     numberOfPages = 0
 
     asignItem(item: any): void {
-        // this.itemsSubject.next({data: item})
-        this.itemsArray.push(item)
-
+        this.itemsSubject.next({data: item})
         this.itemsNum++
     }
     
-    @Cron("0 * * * *")
+    @Cron("*/30 * * * *")
     clearItems(): void {
-        // this.itemsSubject.complete()
-        // this.itemsSubject = new ReplaySubject() 
-        this.itemsArray = []
+        this.itemsSubject.complete()
+        this.itemsSubject = new ReplaySubject() 
 
         this.itemsNum = 0
 
-        // this.statsObs.complete()
-        // this.statsObs = new ReplaySubject()
-        this.statsArray = []
+        this.statsObs.complete()
+        this.statsObs = new ReplaySubject()
 
         this.scrapingTime = []
         this.errors = 0
@@ -125,8 +124,7 @@ export class ScraperService {
         console.log(`\nItems and Logs cleared on: ${new Date()}\n`)
     }
 
-    // statsObs = new ReplaySubject()
-    statsArray = []
+    statsObs = new ReplaySubject()
     @Cron("*/1 * * * *")
     async getStats(){
         const stats = { 
@@ -136,7 +134,6 @@ export class ScraperService {
             errors: this.errors,
         }
 
-        // this.statsObs.next({data: stats})
-        this.statsArray.push(stats)
+        this.statsObs.next({data: stats})
     }
 }
