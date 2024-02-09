@@ -57,6 +57,6 @@ export class ScraperController {
     // @UseGuards(AuthGuard)
     @Get("stats")
     stats(){
-        return this.scraperService.statsArray
+        return this.scraperService.stats
     }
 }

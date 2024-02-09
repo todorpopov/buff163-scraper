@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { getRandomItem, checkStickerCache, parseFile, sleep } from './external_functions';
 import { ReplaySubject } from 'rxjs';
+import { Cron } from '@nestjs/schedule';
 const os = require('os')
 
 @Injectable()
 export class ScraperService {
+    @Cron("*/1 * * * * *")
     async scrapeRandomPage(){
         const start = performance.now()
 
@@ -120,13 +122,14 @@ export class ScraperService {
         this.itemsNum++
     }
     
+    @Cron("0 0 * * *")
     clearItems(): void {
         this.itemsSubject.complete()
         this.itemsSubject = new ReplaySubject()
 
         this.itemsNum = 0
 
-        this.statsArray = []
+        this.stats = {}
 
         this.scrapingTime = []
         this.errors = 0
@@ -136,7 +139,8 @@ export class ScraperService {
     }
 
 
-    statsArray = []
+    stats = {}
+    @Cron("*/1 * * * * *")
     getStats(){
         const freeMemory = Math.round(os.freemem() / 1024 / 1024)
         const totalMemory = Math.round(os.totalmem() / 1024 / 1024)
@@ -146,7 +150,8 @@ export class ScraperService {
             this.clearItems()
         }
 
-        const stats = { 
+        const stats = {
+            date: new Date().toString(),
             number_of_items: this.itemsNum,
             pages_scraped: this.numberOfPages,
             average_scrape_time_ms: (this.scrapingTime.reduce((a, b) => a + b, 0) / this.scrapingTime.length).toFixed(2),
@@ -156,6 +161,6 @@ export class ScraperService {
             total_memory: totalMemory
         }
 
-        this.statsArray.push(stats)
+        this.stats = stats
     }
 }
