@@ -35,9 +35,11 @@ export class ScraperService {
         
         let itemsArray: any[]
         let itemReferencePrice: number
+        let itemImgURL: string
         try{
             itemsArray = pageData.data.items
             itemReferencePrice = pageData.data.goods_infos[`${randomItem.code}`].steam_price_cny
+            itemImgURL = pageData.data.goods_infos[`${randomItem.code}`].icon_url
         }catch(err){
             console.log(randomItem.code + ': ' + err)
             return
@@ -54,7 +56,6 @@ export class ScraperService {
             if(itemStickers.length === 0){return}
             
             itemStickers.forEach(async(sticker) => {
-                delete sticker.img_url
                 delete sticker.category
                 delete sticker.sticker_id
                 sticker.price = checkStickerCache(this.stickerCache, `Sticker | ${sticker.name}`)
@@ -68,6 +69,7 @@ export class ScraperService {
 
             const newItemObject = {
                 id: item.asset_info.assetid,
+                img_url: itemImgURL,
                 name: itemName,
                 price: itemPrice,
                 reference_price: itemReferencePrice,
