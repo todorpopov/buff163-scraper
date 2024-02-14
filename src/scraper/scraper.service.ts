@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { getRandomItem, checkStickerCache, parseFile, sleep } from './external_functions';
+import { getRandomItem, checkStickerCache, parseFile, sleep, comparePrices } from './external_functions';
 import { ReplaySubject } from 'rxjs';
 import { Cron } from '@nestjs/schedule';
 const os = require('os')
@@ -24,23 +24,32 @@ export class ScraperService {
         const itemLink = `https://buff.163.com/api/market/goods/sell_order?game=csgo&goods_id=${randomItem.code}&page_num=1`
 
         let pageData: any = await fetch(itemLink, {method: 'GET'}).then(res => res.text()).catch(err => console.error('error - 1: ' + err));
-        if(pageData[0] !== "{"){
+        
+        const isHTML = pageData[0] !== "{"
+        if(isHTML){
             console.log(pageData)
             this.errors++
             return
-        }else{
-            pageData = JSON.parse(pageData)
         }
+        pageData = JSON.parse(pageData)
         
         let itemsArray: any[]
+        let itemReferencePrice: number
         try{
             itemsArray = pageData.data.items
+            itemReferencePrice = pageData.data.goods_infos[`${randomItem.code}`].steam_price_cny
         }catch(err){
-            console.log(err)
+            console.log(randomItem.code + ': ' + err)
             return
         }
 
+
         itemsArray.forEach(item => {
+            const itemPrice = Number(item.price)
+            const priceDifference = comparePrices(120, itemReferencePrice, itemPrice)
+
+            if(priceDifference !== true){return}
+
             const itemStickers = item.asset_info.info.stickers
             if(itemStickers.length === 0){return}
             
@@ -60,7 +69,8 @@ export class ScraperService {
             const newItemObject = {
                 id: item.asset_info.assetid,
                 name: itemName,
-                price: Number(item.price),
+                price: itemPrice,
+                reference_price: itemReferencePrice,
                 number_of_stickers: itemStickers.length,
                 stickers: itemStickers,
                 item_offer_url: `https://buff.163.com/shop/${item.user_id}#tab=selling&game=csgo&page_num=1&search=${itemName.replaceAll(' ', '%20')}`,

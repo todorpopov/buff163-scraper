@@ -1,7 +1,7 @@
 import * as path from 'path'
 import * as fs from 'fs'
 
-export function parseStickersPrices(stickersArray: string[]) {
+export function parseStickersPrices(stickersArray: string[]): any[] {
     const itemStickers = []
     for(let i = 0; i < stickersArray.length; i++){
         const startIndex = stickersArray[i].indexOf('¥')
@@ -24,7 +24,7 @@ export function randomNumber(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min) + min)
 }
 
-export function parseFile(): any[]{
+export function parseFile(): any{
     const filePath = path.join(process.cwd(), './src/scraper/item_ids/ids.txt')
 
     const fileContent = []
@@ -44,7 +44,7 @@ export function parseFile(): any[]{
     return fileContent
 }
 
-export function getRandomItem(fileContent){
+export function getRandomItem(fileContent: any[]): any{
     const randLine = randomNumber(0, fileContent.length)
     const randomItem = {
         code: fileContent[randLine].code,
@@ -54,7 +54,7 @@ export function getRandomItem(fileContent){
     return randomItem
 }
 
-export function stickerPriceFilter(itemObject, targetPercantage): boolean {
+export function stickerPriceFilter(itemObject: any, targetPercantage: number): boolean {
     itemObject = itemObject || {}
 
     const itemPrice = itemObject.price;
@@ -75,7 +75,7 @@ export function stickerPriceFilter(itemObject, targetPercantage): boolean {
     return false
 }
 
-export function checkStickerCache(array, name){
+export function checkStickerCache(array: any[], name: string): number{
     for(const item of array){
         if(item.name === name){
             return Number(item.price)
@@ -84,8 +84,19 @@ export function checkStickerCache(array, name){
     return 0
 }
 
-export async function sleep(ms) {
+export async function sleep(ms: number): Promise<void>{
   return new Promise((resolve) => {
     setTimeout(resolve, ms)
   })
+}
+
+export function comparePrices(percentageTarget, referencePrice, itemPrice){
+    if(itemPrice < referencePrice){return true}
+
+    const percentageDifference = (itemPrice / referencePrice) * 100
+    // console.log(percentageDifference)
+
+    if(percentageDifference > percentageTarget){return false}
+
+    return true
 }
