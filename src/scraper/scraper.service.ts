@@ -88,7 +88,7 @@ export class ScraperService {
     
     fileContent = []
     getFileContent(){
-        this.fileContent = parseFile()
+        this.fileContent = parseFile('./src/files/ids.txt')
         console.log("File content has been parsed!")
     }
 

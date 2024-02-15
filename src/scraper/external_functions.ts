@@ -24,15 +24,15 @@ export function randomNumber(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min) + min)
 }
 
-export function parseFile(): any{
-    const filePath = path.join(process.cwd(), './src/scraper/item_ids/ids.txt')
+export function parseFile(filename): any{
+    const filePath = path.join(process.cwd(), filename)
 
     const fileContent = []
     try {
         const data = fs.readFileSync(filePath, 'utf8')
         const splitLines = data.split('\n')
         for(let i = 0; i < splitLines.length; i++) {
-            const splitLine = splitLines[i].split(';')
+            const splitLine = splitLines[i].split(':')
             fileContent.push({
                 code: splitLine[0],
                 item_name: splitLine[1]
@@ -43,6 +43,8 @@ export function parseFile(): any{
     }
     return fileContent
 }
+
+
 
 export function getRandomItem(fileContent: any[]): any{
     const randLine = randomNumber(0, fileContent.length)
