@@ -44,8 +44,6 @@ export function parseFile(filename): any{
     return fileContent
 }
 
-
-
 export function getRandomItem(fileContent: any[]): any{
     const randLine = randomNumber(0, fileContent.length)
     const randomItem = {
@@ -102,3 +100,16 @@ export function comparePrices(percentageTarget, referencePrice, itemPrice){
 
     return true
 }
+
+export const proxiesArray = [
+    '154.9.33.92:8800',
+    '154.9.35.52:8800',
+    '154.9.33.154:8800',
+    '154.9.35.253:8800',
+    '196.51.194.238:8800',
+    '196.51.194.166:8800',
+    '196.51.194.110:8800',
+    '196.51.201.165:8800',
+    '196.51.201.128:8800',
+    '196.51.201.55:8800'
+]

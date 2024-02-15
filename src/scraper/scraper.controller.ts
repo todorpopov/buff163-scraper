@@ -29,20 +29,12 @@ export class ScraperController {
         return {msg: "Successfully fetched current sticker prices!"} 
     }
 
-    @ApiOperation({ summary: "Start a queue of length 'items'. 'delay' is used to prevent 429 requests" })
-    // @UseGuards(AuthGuard)
-    @Get("start_queue/:items/:delay")
-    queue(@Param('items') items: string, @Param('delay') delay: string){
-        this.scraperService.queue(Number(items), Number(delay))
-        return { msg: `Queue (length ${items}) has been started!` }
-    }
-
     @ApiOperation({ summary: "Starts 'num' number of queues of length 'len'" })
     // @UseGuards(AuthGuard)
-    @Get("start_queues/:num/:len")
-    multipleQueues(@Param('num') num: string, @Param('len') len: string){
-        this.scraperService.startMultipleQueues(Number(num), Number(len))
-        return { msg: `${num} queues of length ${len} have been started!` }
+    @Get("queue/:len")
+    multipleQueues(@Param('len') len: string){
+        this.scraperService.startMultipleQueues(Number(len))
+        return { msg: `10 queues of length ${len} have been started!` }
     }
 
     @ApiOperation({ summary: 'Clears all data from the observable and the array' })

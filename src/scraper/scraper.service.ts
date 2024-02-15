@@ -1,17 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { getRandomItem, checkStickerCache, parseFile, sleep, comparePrices } from './external_functions';
-import { ReplaySubject } from 'rxjs';
-import { Cron } from '@nestjs/schedule';
+import { Injectable } from '@nestjs/common'
+import { getRandomItem, checkStickerCache, parseFile, sleep, comparePrices, proxiesArray } from './external_functions'
+import { ReplaySubject } from 'rxjs'
+import { Cron } from '@nestjs/schedule'
+import fetch from 'node-fetch'
+import { HttpsProxyAgent } from 'https-proxy-agent'
 const os = require('os')
 
 @Injectable()
 export class ScraperService {
-    @Cron("*/1 * * * * *")
-    async scrapeRandomPage(){
+    async scrapeRandomPage(proxy){
         const start = performance.now()
 
-        if(this.fileContent.length === 0){
-            this.getFileContent()
+        if(this.itemFileContent.length === 0){
+            this.getItemFileContent()
         }
 
         if(this.stickerCache.length === 0){
@@ -20,28 +21,26 @@ export class ScraperService {
 
         this.numberOfPages++
 
-        const randomItem = getRandomItem(this.fileContent)
+        const randomItem = getRandomItem(this.itemFileContent)
         const itemLink = `https://buff.163.com/api/market/goods/sell_order?game=csgo&goods_id=${randomItem.code}&page_num=1`
 
-        let pageData: any = await fetch(itemLink, {method: 'GET'}).then(res => res.text()).catch(err => console.error('error - 1: ' + err));
-        
-        const isHTML = pageData[0] !== "{"
-        if(isHTML){
-            console.log(pageData)
+        const proxyAgent = new HttpsProxyAgent(`http://${proxy}`)
+        let pageData: any = await fetch(itemLink, {method: 'GET', agent: proxyAgent}).then(res => res.text()).catch(err => {
             this.errors++
-            return
-        }
-        pageData = JSON.parse(pageData)
+            console.error('error - 1: ' + err)
+        })
         
         let itemsArray: any[]
         let itemReferencePrice: number
         let itemImgURL: string
         try{
+            pageData = JSON.parse(pageData)
             itemsArray = pageData.data.items
             itemReferencePrice = pageData.data.goods_infos[`${randomItem.code}`].steam_price_cny
             itemImgURL = pageData.data.goods_infos[`${randomItem.code}`].icon_url
-        }catch(err){
-            console.log(randomItem.code + ': ' + err)
+        }catch(error){
+            console.log(randomItem.code + ': ' + error)
+            this.errors++
             return
         }
 
@@ -86,39 +85,34 @@ export class ScraperService {
         this.scrapingTime.push((end - start))
     }
     
-    fileContent = []
-    getFileContent(){
-        this.fileContent = parseFile('./src/files/ids.txt')
-        console.log("File content has been parsed!")
+    itemFileContent = []
+    getItemFileContent(){
+        this.itemFileContent = parseFile('./src/files/ids.txt')
+        console.log("\nItem file content has been parsed!")
     }
 
     stickerCache = []
     async fetchStickerPrices(){
         const stickerURI = "https://stickers-server-adjsr.ondigitalocean.app/array"
         this.stickerCache = await fetch(stickerURI, {method: 'GET'}).then(res => res.json()).catch(err => console.error('error - stickers fetch: ' + err))
-        console.log("Fetched latest stickers!")
+        console.log("\nFetched latest stickers!")
     }
 
-
-    async queue(len: number, delay: number){
+    async queue(proxy: string, len: number){
         const start = performance.now()
-        console.log(`New queue (${len} items), and sleep (${delay}) has been started!`)
+        console.log(`\nProxy: ${proxy}\nNew queue (${len} items)`)
 
         for(let i = 0; i < len; i++){
-            await this.scrapeRandomPage()
-            await sleep(delay)
-            if(i % 10 === 0){
-                this.getStats()
-            }
+            await this.scrapeRandomPage(proxy)
         }
         const end = performance.now()
-        console.log(`Time to iterate over ${len} items: ${(end - start).toFixed(2)} ms`)
+        console.log(`\nTime to iterate over ${len} items: ${((end - start) / 1000).toFixed(2)} s`)
     }
 
-    startMultipleQueues(num: number, len: number){
-        for(let i = 0; i < num; i++){
-            this.queue(len, 1000)
-        }
+    startMultipleQueues(len: number){
+        proxiesArray.forEach(proxy =>{
+            this.queue(proxy, len)
+        })
     }
 
 
