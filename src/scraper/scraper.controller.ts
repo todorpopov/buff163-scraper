@@ -2,8 +2,9 @@ import { Controller, Get, Param, Sse, UseGuards } from '@nestjs/common';
 import { ScraperService } from './scraper.service';
 import { filter } from 'rxjs';
 import { AuthGuard } from '../auth/auth.guard';
-import { stickerPriceFilter } from './external_functions';
+import { stickerPriceFilter, proxies } from './external_functions';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { QueueService } from 'src/queue/queue.service';
 
 @ApiTags('scraper')
 @Controller('scraper')
@@ -29,12 +30,22 @@ export class ScraperController {
         return {msg: "Successfully fetched current sticker prices!"} 
     }
 
-    @ApiOperation({ summary: "Starts 'num' number of queues of length 'len'" })
+    @ApiOperation({ summary: "Starts a queue of all items saved in the 'items.txt' file" })
     // @UseGuards(AuthGuard)
-    @Get("queue")
-    queues(){
-        this.scraperService.startQueues()
-        return { msg: `10 queues have been started!` }
+    @Get('queue')
+    queue(){
+        const queue = new QueueService()
+
+        const chunkSize = proxies.length
+        const array = queue.divideQueue(chunkSize)
+
+        if(array.length !== chunkSize){return { msg: "An error occured!"}}
+
+        for(let i = 0; i < chunkSize; i++){
+            this.scraperService.scrapeArray(array[i], proxies[i])
+        }
+
+        return {msg: "Queue started successfully!"}
     }
 
     @ApiOperation({ summary: 'Clears all data from the observable and the array' })
@@ -42,7 +53,7 @@ export class ScraperController {
     @Get("clear")
     clearObservable(){
         this.scraperService.clearItems()
-        return { msg: "Items successfully cleared!" }
+        return { msg: "Items cleared successfully!" }
     }
     
     @ApiOperation({ summary: "Get server stats" })

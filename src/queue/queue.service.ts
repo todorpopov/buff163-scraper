@@ -1,23 +1,24 @@
 import { Injectable } from '@nestjs/common';
-import { parseFile } from 'src/scraper/external_functions';
-import { ScraperService } from 'src/scraper/scraper.service';
+import { parseFile, shuffleArray } from 'src/scraper/external_functions';
 
 @Injectable()
 export class QueueService {
-    constructor(private readonly scraperService: ScraperService) {}
-    itemFileContent = parseFile('./src/files/ids.txt')
+    itemFileContent = []
 
-    async queue(proxy: string){
-        const start = performance.now()
-    
-        console.log(`\nNew queue started!\nProxy: ${proxy}`)
-    
-        for(const item of this.itemFileContent){
-            console.log(item)
-            await this.scraperService.scrapePage(item, proxy)
+    constructor() {
+        this.itemFileContent = parseFile('./src/files/items.txt')
+        shuffleArray(this.itemFileContent)
+    }
+
+    divideQueue(numOfElems){
+        const originalArraySize = this.itemFileContent.length
+        const chunkSize = originalArraySize / numOfElems
+        const arrayOfArrays = []
+
+        for (let i = 0; i < originalArraySize; i += chunkSize) {
+            arrayOfArrays.push(this.itemFileContent.slice(i, i + chunkSize));
         }
-    
-        const end = performance.now()
-        console.log(`\nTime to iterate over queue: ${((end - start) / 1000).toFixed(2)} s`)
+
+        return arrayOfArrays
     }
 }

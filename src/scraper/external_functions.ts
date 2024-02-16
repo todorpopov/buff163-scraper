@@ -1,23 +1,6 @@
 import * as path from 'path'
 import * as fs from 'fs'
 
-export function parseStickersPrices(stickersArray: string[]): any[] {
-    const itemStickers = []
-    for(let i = 0; i < stickersArray.length; i++){
-        const startIndex = stickersArray[i].indexOf('¥')
-        let sticker = 0
-        if(startIndex === -1){ 
-            sticker = 0
-        } else {
-            const endIndex = stickersArray[i].length - 1
-            sticker = Number(stickersArray[i].slice(startIndex + 2, endIndex))
-        }
-        itemStickers.push(sticker)
-    }
-
-    return itemStickers
-}
-
 export function randomNumber(min: number, max: number): number {
     min = Math.ceil(min)
     max = Math.floor(max)
@@ -113,7 +96,7 @@ export function shuffleArray(array) {
     }
 }
 
-export const proxiesArray = [
+export const proxies = [
     '154.9.33.92:8800',
     '154.9.35.52:8800',
     '154.9.33.154:8800',

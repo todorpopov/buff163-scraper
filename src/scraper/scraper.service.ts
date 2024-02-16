@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { getRandomItem, checkStickerCache, parseFile, sleep, comparePrices, proxiesArray, shuffleArray } from './external_functions'
+import { checkStickerCache, comparePrices } from './external_functions'
 import { ReplaySubject } from 'rxjs'
 import { Cron } from '@nestjs/schedule'
 import fetch from 'node-fetch'
@@ -82,36 +82,18 @@ export class ScraperService {
         this.scrapingTime.push((end - start))
     }
     
+    async scrapeArray(array, proxy){
+        for(const item of array){
+            await this.scrapePage(item, proxy)
+        }
+    }
+
     stickerCache = []
     async fetchStickerPrices(){
         const stickerURI = "https://stickers-server-adjsr.ondigitalocean.app/array"
         this.stickerCache = await fetch(stickerURI, {method: 'GET'}).then(res => res.json()).catch(err => console.error('error - stickers fetch: ' + err))
         console.log("\nFetched latest stickers!")
     }
-
-    itemFileContent = parseFile('./src/files/ids.txt')
-
-    async queue(proxy: string){
-        const start = performance.now()
-
-        shuffleArray(this.itemFileContent)
-        console.log(`\nNew queue started!\nProxy: ${proxy}`)
-
-        for(const item of this.itemFileContent){
-            console.log(item)
-            await this.scrapePage(item, proxy)
-        }
-
-        const end = performance.now()
-        console.log(`\nTime to iterate over queue: ${((end - start) / 1000).toFixed(2)} s`)
-    }
-
-    startQueues(){
-        for(const proxy of proxiesArray){
-            this.queue(proxy)
-        }
-    }
-
 
     errorItemCodes = []
 
