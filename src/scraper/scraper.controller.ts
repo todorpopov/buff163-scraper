@@ -62,7 +62,7 @@ export class ScraperController {
             item_max_price: 100000,
             min_memory: 10
         })
-        return { msg: "Options updated successfully!"}
+        return { msg: "Options reset successfully!"}
     }
 
     @ApiOperation({ summary: 'Clears all data from the observable and the array' })
