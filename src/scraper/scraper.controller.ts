@@ -48,9 +48,20 @@ export class ScraperController {
         return {msg: "Queue started successfully!"}
     }
 
-    @Post('options')
-    updateScraperOptions(@Body() newOtions){
+    @Post('options/update')
+    updateOptions(@Body() newOtions){
         this.scraperService.updateOptions(newOtions)
+        return { msg: "Options updated successfully!"}
+    }
+
+    @Post('options/update')
+    resetOptions(){
+        this.scraperService.updateOptions({
+            reference_price_percentage: 150,
+            item_min_price: 0,
+            item_max_price: 100000,
+            min_memory: 10
+        })
         return { msg: "Options updated successfully!"}
     }
 
