@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Sse, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Sse, UseGuards } from '@nestjs/common';
 import { ScraperService } from './scraper.service';
 import { filter } from 'rxjs';
 import { AuthGuard } from '../auth/auth.guard';
@@ -46,6 +46,12 @@ export class ScraperController {
         }
 
         return {msg: "Queue started successfully!"}
+    }
+
+    @Post('options')
+    updateScraperOptions(@Body() newOtions){
+        this.scraperService.updateOptions(newOtions)
+        return { msg: "Options updated successfully!"}
     }
 
     @ApiOperation({ summary: 'Clears all data from the observable and the array' })

@@ -8,6 +8,17 @@ const os = require('os')
 
 @Injectable()
 export class ScraperService {
+    options = {
+        reference_price_percentage: 150,
+        item_min_price: 0,
+        item_max_price: 100000,
+        min_memory: 10
+    }
+
+    updateOptions(newOptions){
+        this.options = newOptions
+    }
+
     async scrapePage(itemObject, proxy){
         const start = performance.now()
 
@@ -44,7 +55,10 @@ export class ScraperService {
 
         itemsArray.forEach(item => {
             const itemPrice = Number(item.price)
-            const priceDifference = comparePrices(120, itemReferencePrice, itemPrice)
+
+            if(itemPrice < this.options.item_min_price || itemPrice > this.options.item_max_price){return}
+
+            const priceDifference = comparePrices(this.options.reference_price_percentage, itemReferencePrice, itemPrice)
 
             if(priceDifference !== true){return}
 
@@ -134,7 +148,7 @@ export class ScraperService {
         const totalMemory = Math.round(os.totalmem() / 1024 / 1024)
         const memoryPercetage = (freeMemory / totalMemory) * 100
 
-        if(memoryPercetage < 10){
+        if(memoryPercetage < this.options.min_memory){
             this.clearItems()
         }
 
@@ -146,7 +160,8 @@ export class ScraperService {
             errors: this.errors,
             free_memory: freeMemory,
             free_memory_percentage: memoryPercetage,
-            total_memory: totalMemory
+            total_memory: totalMemory,
+            options: this.options
         }
 
         this.stats = stats
