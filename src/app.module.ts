@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
+import { QueueModule } from './queue/queue.module';
 
 @Module({
   imports: [
@@ -14,8 +15,10 @@ import { ScheduleModule } from '@nestjs/schedule';
     ScraperModule, 
     AuthModule, 
     UsersModule,
-    ScheduleModule.forRoot()
+    ScheduleModule.forRoot(),
+    QueueModule,
   ],
   controllers: [AppController],
+  providers: [],
 })
 export class AppModule {}

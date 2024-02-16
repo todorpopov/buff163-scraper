@@ -31,10 +31,10 @@ export class ScraperController {
 
     @ApiOperation({ summary: "Starts 'num' number of queues of length 'len'" })
     // @UseGuards(AuthGuard)
-    @Get("queue/:len")
-    multipleQueues(@Param('len') len: string){
-        this.scraperService.startMultipleQueues(Number(len))
-        return { msg: `10 queues of length ${len} have been started!` }
+    @Get("queue")
+    queues(){
+        this.scraperService.startQueues()
+        return { msg: `10 queues have been started!` }
     }
 
     @ApiOperation({ summary: 'Clears all data from the observable and the array' })
@@ -50,5 +50,10 @@ export class ScraperController {
     @Get("stats")
     stats(){
         return this.scraperService.stats
+    }
+
+    @Get("error_codes")
+    getErrorCodes(){
+        return this.scraperService.errorItemCodes
     }
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { getRandomItem, checkStickerCache, parseFile, sleep, comparePrices, proxiesArray } from './external_functions'
+import { getRandomItem, checkStickerCache, parseFile, sleep, comparePrices, proxiesArray, shuffleArray } from './external_functions'
 import { ReplaySubject } from 'rxjs'
 import { Cron } from '@nestjs/schedule'
 import fetch from 'node-fetch'
@@ -8,12 +8,8 @@ const os = require('os')
 
 @Injectable()
 export class ScraperService {
-    async scrapeRandomPage(proxy){
+    async scrapePage(itemObject, proxy){
         const start = performance.now()
-
-        if(this.itemFileContent.length === 0){
-            this.getItemFileContent()
-        }
 
         if(this.stickerCache.length === 0){
             await this.fetchStickerPrices()
@@ -21,12 +17,12 @@ export class ScraperService {
 
         this.numberOfPages++
 
-        const randomItem = getRandomItem(this.itemFileContent)
-        const itemLink = `https://buff.163.com/api/market/goods/sell_order?game=csgo&goods_id=${randomItem.code}&page_num=1`
+        const itemLink = `https://buff.163.com/api/market/goods/sell_order?game=csgo&goods_id=${itemObject.code}&page_num=1`
 
         const proxyAgent = new HttpsProxyAgent(`http://${proxy}`)
         let pageData: any = await fetch(itemLink, {method: 'GET', agent: proxyAgent}).then(res => res.text()).catch(err => {
             this.errors++
+            this.errorItemCodes.push(itemObject.code)
             console.error('error - 1: ' + err)
         })
         
@@ -36,11 +32,12 @@ export class ScraperService {
         try{
             pageData = JSON.parse(pageData)
             itemsArray = pageData.data.items
-            itemReferencePrice = pageData.data.goods_infos[`${randomItem.code}`].steam_price_cny
-            itemImgURL = pageData.data.goods_infos[`${randomItem.code}`].icon_url
+            itemReferencePrice = pageData.data.goods_infos[`${itemObject.code}`].steam_price_cny
+            itemImgURL = pageData.data.goods_infos[`${itemObject.code}`].icon_url
         }catch(error){
-            console.log(randomItem.code + ': ' + error)
+            console.log(itemObject.code + ': ' + error)
             this.errors++
+            this.errorItemCodes.push(itemObject.code)
             return
         }
 
@@ -61,7 +58,7 @@ export class ScraperService {
             })
 
 
-            let itemName = randomItem.name
+            let itemName = itemObject.item_name
             if(itemName.includes('StatTrak')){
                 itemName = itemName.slice(10)
             }
@@ -85,12 +82,6 @@ export class ScraperService {
         this.scrapingTime.push((end - start))
     }
     
-    itemFileContent = []
-    getItemFileContent(){
-        this.itemFileContent = parseFile('./src/files/ids.txt')
-        console.log("\nItem file content has been parsed!")
-    }
-
     stickerCache = []
     async fetchStickerPrices(){
         const stickerURI = "https://stickers-server-adjsr.ondigitalocean.app/array"
@@ -98,22 +89,31 @@ export class ScraperService {
         console.log("\nFetched latest stickers!")
     }
 
-    async queue(proxy: string, len: number){
+    itemFileContent = parseFile('./src/files/ids.txt')
+
+    async queue(proxy: string){
         const start = performance.now()
-        console.log(`\nProxy: ${proxy}\nNew queue (${len} items)`)
 
-        for(let i = 0; i < len; i++){
-            await this.scrapeRandomPage(proxy)
+        shuffleArray(this.itemFileContent)
+        console.log(`\nNew queue started!\nProxy: ${proxy}`)
+
+        for(const item of this.itemFileContent){
+            console.log(item)
+            await this.scrapePage(item, proxy)
         }
+
         const end = performance.now()
-        console.log(`\nTime to iterate over ${len} items: ${((end - start) / 1000).toFixed(2)} s`)
+        console.log(`\nTime to iterate over queue: ${((end - start) / 1000).toFixed(2)} s`)
     }
 
-    startMultipleQueues(len: number){
-        proxiesArray.forEach(proxy =>{
-            this.queue(proxy, len)
-        })
+    startQueues(){
+        for(const proxy of proxiesArray){
+            this.queue(proxy)
+        }
     }
+
+
+    errorItemCodes = []
 
 
     itemsSubject = new ReplaySubject()

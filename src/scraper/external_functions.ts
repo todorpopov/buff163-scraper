@@ -101,6 +101,18 @@ export function comparePrices(percentageTarget, referencePrice, itemPrice){
     return true
 }
 
+export function shuffleArray(array) {
+    let currentIndex = array.length,  randomIndex;
+  
+    while (currentIndex > 0) {
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+  
+      [array[currentIndex], array[randomIndex]] = [
+        array[randomIndex], array[currentIndex]];
+    }
+}
+
 export const proxiesArray = [
     '154.9.33.92:8800',
     '154.9.35.52:8800',
