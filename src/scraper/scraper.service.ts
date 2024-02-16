@@ -9,7 +9,7 @@ const os = require('os')
 @Injectable()
 export class ScraperService {
     options = {
-        reference_price_percentage: 100,
+        reference_price_percentage: 150,
         item_min_price: 0,
         item_max_price: 1000000,
         min_memory: 10
