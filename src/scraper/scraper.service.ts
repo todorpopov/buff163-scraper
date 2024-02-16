@@ -9,9 +9,9 @@ const os = require('os')
 @Injectable()
 export class ScraperService {
     options = {
-        reference_price_percentage: 150,
+        reference_price_percentage: 100,
         item_min_price: 0,
-        item_max_price: 100000,
+        item_max_price: 1000000,
         min_memory: 10
     }
 
@@ -43,7 +43,7 @@ export class ScraperService {
         try{
             pageData = JSON.parse(pageData)
             itemsArray = pageData.data.items
-            itemReferencePrice = pageData.data.goods_infos[`${itemObject.code}`].steam_price_cny
+            itemReferencePrice = Number(pageData.data.goods_infos[`${itemObject.code}`].steam_price_cny)
             itemImgURL = pageData.data.goods_infos[`${itemObject.code}`].icon_url
         }catch(error){
             console.log(itemObject.code + ': ' + error)

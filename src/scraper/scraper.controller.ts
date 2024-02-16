@@ -54,12 +54,12 @@ export class ScraperController {
         return { msg: "Options updated successfully!"}
     }
 
-    @Post('options/update')
+    @Post('options/reset')
     resetOptions(){
         this.scraperService.updateOptions({
             reference_price_percentage: 150,
             item_min_price: 0,
-            item_max_price: 100000,
+            item_max_price: 1000000,
             min_memory: 10
         })
         return { msg: "Options reset successfully!"}

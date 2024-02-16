@@ -73,7 +73,7 @@ export async function sleep(ms: number): Promise<void>{
   })
 }
 
-export function comparePrices(percentageTarget, referencePrice, itemPrice){
+export function comparePrices(percentageTarget: number, referencePrice: number, itemPrice: number){
     if(itemPrice < referencePrice){return true}
 
     const percentageDifference = (itemPrice / referencePrice) * 100
@@ -84,7 +84,7 @@ export function comparePrices(percentageTarget, referencePrice, itemPrice){
     return true
 }
 
-export function shuffleArray(array) {
+export function shuffleArray(array: any[]) {
     let currentIndex = array.length,  randomIndex;
   
     while (currentIndex > 0) {
