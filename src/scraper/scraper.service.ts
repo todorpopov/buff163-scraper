@@ -113,7 +113,7 @@ export class ScraperService {
     }
 
 
-    @Cron("*/30 * * * *")
+    @Cron("*/18 * * * *")
     startQueue(){
         const queue = new QueueService()
 
