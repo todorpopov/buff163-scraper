@@ -112,7 +112,6 @@ export class ScraperService {
         console.log("\nFetched latest stickers!")
     }
 
-
     @Cron("*/18 * * * *")
     startQueue(){
         const queue = new QueueService()
@@ -156,7 +155,6 @@ export class ScraperService {
 
         console.log(`\nItems and Logs cleared on: ${new Date()}\n`)
     }
-
 
     stats = {}
     @Cron("*/1 * * * * *")
