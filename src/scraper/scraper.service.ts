@@ -1,15 +1,16 @@
 import { Injectable } from '@nestjs/common'
-import { checkStickerCache, comparePrices } from './external_functions'
+import { checkStickerCache, comparePrices, proxies } from './external_functions'
 import { ReplaySubject } from 'rxjs'
 import { Cron } from '@nestjs/schedule'
 import fetch from 'node-fetch'
 import { HttpsProxyAgent } from 'https-proxy-agent'
+import { QueueService } from 'src/queue/queue.service'
 const os = require('os')
 
 @Injectable()
 export class ScraperService {
     options = {
-        reference_price_percentage: 150,
+        reference_price_percentage: -1,
         item_min_price: 0,
         item_max_price: 1000000,
         min_memory: 10
@@ -58,9 +59,11 @@ export class ScraperService {
 
             if(itemPrice < this.options.item_min_price || itemPrice > this.options.item_max_price){return}
 
-            const priceDifference = comparePrices(this.options.reference_price_percentage, itemReferencePrice, itemPrice)
-
-            if(priceDifference !== true){return}
+            if(this.options.reference_price_percentage !== -1){
+                const priceDifference = comparePrices(this.options.reference_price_percentage, itemReferencePrice, itemPrice)
+    
+                if(priceDifference !== true){return}
+            }
 
             const itemStickers = item.asset_info.info.stickers
             if(itemStickers.length === 0){return}
@@ -109,14 +112,27 @@ export class ScraperService {
         console.log("\nFetched latest stickers!")
     }
 
-    errorItemCodes = []
 
+    @Cron("*/30 * * * *")
+    startQueue(){
+        const queue = new QueueService()
+
+        const chunkSize = proxies.length
+        const array = queue.divideQueue(chunkSize)
+
+        if(array.length !== chunkSize){return { msg: "An error occured!"}}
+
+        for(let i = 0; i < chunkSize; i++){
+            this.scrapeArray(array[i], proxies[i])
+        }
+    }
 
     itemsSubject = new ReplaySubject()
     itemsNum = 0
-
+    
     scrapingTime = []
     errors = 0
+    errorItemCodes = []
     numberOfPages = 0
 
     asignItem(item: any): void {
@@ -135,6 +151,7 @@ export class ScraperService {
 
         this.scrapingTime = []
         this.errors = 0
+        this.errorItemCodes = []
         this.numberOfPages = 0
 
         console.log(`\nItems and Logs cleared on: ${new Date()}\n`)

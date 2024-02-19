@@ -34,17 +34,7 @@ export class ScraperController {
     // @UseGuards(AuthGuard)
     @Get('queue')
     queue(){
-        const queue = new QueueService()
-
-        const chunkSize = proxies.length
-        const array = queue.divideQueue(chunkSize)
-
-        if(array.length !== chunkSize){return { msg: "An error occured!"}}
-
-        for(let i = 0; i < chunkSize; i++){
-            this.scraperService.scrapeArray(array[i], proxies[i])
-        }
-
+        this.scraperService.startQueue()
         return {msg: "Queue started successfully!"}
     }
 
