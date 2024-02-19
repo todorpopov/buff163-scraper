@@ -4,7 +4,6 @@ import { filter } from 'rxjs';
 import { AuthGuard } from '../auth/auth.guard';
 import { stickerPriceFilter, proxies } from './external_functions';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { QueueService } from 'src/queue/queue.service';
 
 @ApiTags('scraper')
 @Controller('scraper')
@@ -12,7 +11,7 @@ export class ScraperController {
     constructor(private readonly scraperService: ScraperService) {}
 
     @ApiOperation({ summary: 'An observable SSE stream for storing the scraped items' })
-    // @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Sse("stream/filter=:filter")
     getDataSse(@Param('filter') stickerFilter: string){
         if(!stickerFilter.match("[1-9][0-9]*")){
@@ -22,8 +21,8 @@ export class ScraperController {
         }
     }
     
-    @ApiOperation({ summary: "Return an array of the cached stickers" })
-    // @UseGuards(AuthGuard)
+    @ApiOperation({ summary: "Returns an array of the cached stickers" })
+    @UseGuards(AuthGuard)
     @Get("fetch_stickers")
     async cachedStickers(){
         await this.scraperService.fetchStickerPrices()
@@ -31,23 +30,25 @@ export class ScraperController {
     }
 
     @ApiOperation({ summary: "Starts a queue of all items saved in the 'items.txt' file" })
-    // @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Get('queue')
     queue(){
         this.scraperService.startQueue()
         return {msg: "Queue started successfully!"}
     }
 
+    @ApiOperation({ summary: 'Updates the server options (requires a JSON in the body param)' })
     @Post('options/update')
     updateOptions(@Body() newOtions){
         this.scraperService.updateOptions(newOtions)
         return { msg: "Options updated successfully!"}
     }
 
+    @ApiOperation({ summary: 'Resets all server options to their defaults' })
     @Post('options/reset')
     resetOptions(){
         this.scraperService.updateOptions({
-            reference_price_percentage: 150,
+            reference_price_percentage: -1,
             item_min_price: 0,
             item_max_price: 1000000,
             min_memory: 10
@@ -55,8 +56,8 @@ export class ScraperController {
         return { msg: "Options reset successfully!"}
     }
 
-    @ApiOperation({ summary: 'Clears all data from the observable and the array' })
-    // @UseGuards(AuthGuard)
+    @ApiOperation({ summary: 'Clears all saved data' })
+    @UseGuards(AuthGuard)
     @Get("clear")
     clearObservable(){
         this.scraperService.clearItems()
@@ -64,13 +65,15 @@ export class ScraperController {
     }
     
     @ApiOperation({ summary: "Get server stats" })
-    // @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Get("stats")
     stats(){
         return this.scraperService.stats
     }
 
+    @ApiOperation({ summary: "Returns an array of all item codes that returned errors during scraping" })
     @Get("error_codes")
+    @UseGuards(AuthGuard)
     getErrorCodes(){
         return this.scraperService.errorItemCodes
     }
