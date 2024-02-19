@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Post, Sse, UseGuards } from '@nestjs/comm
 import { ScraperService } from './scraper.service';
 import { distinct, filter } from 'rxjs';
 import { AuthGuard } from '../auth/auth.guard';
-import { stickerPriceFilter, proxies } from './external_functions';
+import { stickerPriceFilter, proxies, uniqueErrors } from './external_functions';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('scraper')
@@ -80,6 +80,6 @@ export class ScraperController {
     @Get("error_codes")
     // @UseGuards(AuthGuard)
     getErrorCodes(){
-        return this.scraperService.errorItemCodes
+        return uniqueErrors(this.scraperService.errorItemCodes)
     }
 }

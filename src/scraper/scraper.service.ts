@@ -121,6 +121,7 @@ export class ScraperService {
 
         if(array.length !== chunkSize){return { msg: "An error occured!"}}
 
+        console.log("Queue has been started!")
         for(let i = 0; i < chunkSize; i++){
             this.scrapeArray(array[i], proxies[i])
         }

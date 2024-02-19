@@ -108,3 +108,9 @@ export const proxies = [
     '196.51.201.128:8800',
     '196.51.201.55:8800'
 ]
+
+export function uniqueErrors(array: any[]){
+    const uniqueElements = [... new Set(array)]
+
+    return { arrayLen: array.length, unique: uniqueElements.length }
+}
