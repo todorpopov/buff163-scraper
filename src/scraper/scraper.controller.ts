@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Post, Sse, UseGuards } from '@nestjs/comm
 import { ScraperService } from './scraper.service';
 import { distinct, filter } from 'rxjs';
 import { AuthGuard } from '../auth/auth.guard';
-import { stickerPriceFilter, proxies, uniqueErrors } from './external_functions';
+import { stickerPriceFilter, uniqueErrors } from './external_functions';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('scraper')
@@ -24,7 +24,7 @@ export class ScraperController {
         }
     }
     
-    @ApiOperation({ summary: "Returns an array of the cached stickers" })
+    @ApiOperation({ summary: "Fetches an array of the cached stickers" })
     // @UseGuards(AuthGuard)
     @Get("fetch_stickers")
     async cachedStickers(){

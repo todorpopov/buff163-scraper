@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { checkStickerCache, comparePrices, proxies } from './external_functions'
+import { checkStickerCache, comparePrices, proxies, sleep } from './external_functions'
 import { ReplaySubject } from 'rxjs'
 import { Cron } from '@nestjs/schedule'
 import fetch from 'node-fetch'
@@ -28,11 +28,32 @@ export class ScraperService {
         }
 
         this.numberOfPages++
-
+        
         const itemLink = `https://buff.163.com/api/market/goods/sell_order?game=csgo&goods_id=${itemObject.code}&page_num=1`
-
         const proxyAgent = new HttpsProxyAgent(`http://${proxy}`)
-        let pageData: any = await fetch(itemLink, {method: 'GET', agent: proxyAgent}).then(res => res.text()).catch(err => {
+
+        const options = {
+            headers: {
+                "accept": "application/json, text/javascript, */*; q=0.01",
+                "accept-language": "bg-BG,bg;q=0.9,en;q=0.8",
+                "sec-ch-ua": "\"Not A(Brand\";v=\"99\", \"Google Chrome\";v=\"121\", \"Chromium\";v=\"121\"",
+                "sec-ch-ua-mobile": "?0",
+                "sec-ch-ua-platform": "\"Windows\"",
+                "sec-fetch-dest": "empty",
+                "sec-fetch-mode": "cors",
+                "sec-fetch-site": "same-origin",
+                "x-requested-with": "XMLHttpRequest"
+            },
+            referrer: "https://buff.163.com/goods/35286",
+            referrerPolicy: "strict-origin-when-cross-origin",
+            body: null,
+            method: "GET",
+            mode: "cors",
+            credentials: "include",
+            agent: proxyAgent
+        }
+
+        let pageData: any = await fetch(itemLink, options).then(res => res.text()).catch(err => {
             this.errors++
             this.errorItemCodes.push(itemObject.code)
             console.error('error - 1: ' + err)
@@ -59,11 +80,8 @@ export class ScraperService {
 
             if(itemPrice < this.options.item_min_price || itemPrice > this.options.item_max_price){return}
 
-            if(this.options.reference_price_percentage !== -1){
-                const priceDifference = comparePrices(this.options.reference_price_percentage, itemReferencePrice, itemPrice)
-    
-                if(priceDifference !== true){return}
-            }
+            const priceDifferenceStatement = comparePrices(this.options.reference_price_percentage, itemReferencePrice, itemPrice)
+            if(priceDifferenceStatement !== true){return}
 
             const itemStickers = item.asset_info.info.stickers
             if(itemStickers.length === 0){return}
