@@ -17,11 +17,11 @@ export class ScraperService {
         sleep_ms: 0,
     }
 
-    updateOptions(newOptions){
+    updateOptions(newOptions: any){
         this.options = newOptions
     }
 
-    async scrapePage(itemObject, proxy){
+    async scrapePage(itemObject: any, proxy: string){
         const start = performance.now()
 
         if(this.stickerCache.length === 0){
@@ -118,7 +118,11 @@ export class ScraperService {
         this.scrapingTime.push((end - start))
     }
     
-    async scrapeArray(array, proxy){
+    async scrapeArray(array: any[], proxy: string){
+        if(this.stickerCache.length === 0){
+            await this.fetchStickerPrices()
+        }
+
         for(const item of array){
             await this.scrapePage(item, proxy)
             await sleep(this.options.sleep_ms)

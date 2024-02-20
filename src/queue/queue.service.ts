@@ -4,7 +4,6 @@ import { parseFile, shuffleArray } from 'src/scraper/external_functions';
 @Injectable()
 export class QueueService {
     itemFileContent = []
-    QueueService: any;
 
     constructor() {
         this.itemFileContent = parseFile('./src/files/items.txt')
