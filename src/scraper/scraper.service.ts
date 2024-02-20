@@ -13,7 +13,7 @@ export class ScraperService {
         reference_price_percentage: -1,
         item_min_price: 0,
         item_max_price: 1000000,
-        min_memory: 10,
+        min_memory: 8,
         sleep_ms: 0,
     }
 
@@ -57,7 +57,7 @@ export class ScraperService {
         let pageData: any = await fetch(itemLink, options).then(res => res.text()).catch(error => {
             this.errors++
             this.errorItemCodes.push(itemObject.code)
-            console.error(error)
+            console.error("\n" + error)
         })
         
         let itemsArray: any[]
@@ -69,7 +69,7 @@ export class ScraperService {
             itemReferencePrice = Number(pageData.data.goods_infos[`${itemObject.code}`].steam_price_cny)
             itemImgURL = pageData.data.goods_infos[`${itemObject.code}`].icon_url
         }catch(error){
-            console.log(itemObject.code + ': ' + error)
+            console.log("\n" + itemObject.code + ': ' + error)
             this.errors++
             this.errorItemCodes.push(itemObject.code)
             return
@@ -90,7 +90,7 @@ export class ScraperService {
             itemStickers.forEach(async(sticker) => {
                 delete sticker.category
                 delete sticker.sticker_id
-                sticker.price = checkStickerCache(this.stickerCache, `Sticker | ${sticker.name}`)
+                sticker.price = checkStickerCache(this.stickerCache, sticker.name)
             })
 
 
@@ -128,7 +128,7 @@ export class ScraperService {
     stickerCache = []
     async fetchStickerPrices(){
         const stickerURI = "https://stickers-server-adjsr.ondigitalocean.app/array"
-        this.stickerCache = await fetch(stickerURI, {method: 'GET'}).then(res => res.json()).catch(err => console.error('error - stickers fetch: ' + err))
+        this.stickerCache = await fetch(stickerURI, {method: 'GET'}).then(res => res.json()).catch(err => console.error('\nerror - stickers fetch: ' + err))
         console.log("\nFetched latest stickers!")
     }
 
@@ -150,7 +150,7 @@ export class ScraperService {
             promises.push(this.scrapeArray(array[i], proxies[i]))
         }
         
-        console.log("Queue has been started!")
+        console.log("\nQueue has been started!")
         await Promise.all(promises)
     }
 
@@ -181,7 +181,7 @@ export class ScraperService {
         this.errorItemCodes = []
         this.numberOfPages = 0
 
-        console.log(`\nItems and Logs cleared on: ${new Date()}\n`)
+        console.log(`\nItems and Logs have been cleared!`)
     }
 
     stats = {}

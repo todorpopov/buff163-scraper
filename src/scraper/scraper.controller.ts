@@ -23,41 +23,48 @@ export class ScraperController {
             .pipe(distinct())
         }
     }
-    
-    @ApiOperation({ summary: "Fetches an array of the cached stickers" })
-    // @UseGuards(AuthGuard)
-    @Get("fetch_stickers")
-    async cachedStickers(){
-        await this.scraperService.fetchStickerPrices()
-        return {msg: "Successfully fetched current sticker prices!"} 
-    }
 
+    stopScraping = false
     @ApiOperation({ summary: "Starts an infinite scraping process" })
     // @UseGuards(AuthGuard)
-    @Get('start')
+    @Post("start")
     async start(){
+        this.stopScraping = false
+        console.log(`\nScraping process has been started:\nstopScraping: ${this.stopScraping}`)
         while(true){
+            if(this.stopScraping){
+                break
+            }
             await this.scraperService.startQueue()
         }
     }
 
+    @ApiOperation({ summary: "Stops the infinite scraping process" })
+    // @UseGuards(AuthGuard)
+    @Post("stop")
+    stop(){
+        this.stopScraping = true
+        console.log(`\nScraping process has been stopped:\nstopScraping: ${this.stopScraping}`)
+        return { msg: "Scraping has been stoped sucessfully!" }
+    }
+
     @ApiOperation({ summary: 'Updates the server options (requires a JSON in the body param)' })
     // @UseGuards(AuthGuard)
-    @Post('options/update')
-    updateOptions(@Body() newOtions){
-        this.scraperService.updateOptions(newOtions)
+    @Post("options/update")
+    updateOptions(@Body() newOptions){
+        this.scraperService.updateOptions(newOptions)
         return { msg: "Options updated successfully!"}
     }
 
     @ApiOperation({ summary: 'Resets all server options to their defaults' })
     // @UseGuards(AuthGuard)
-    @Post('options/reset')
+    @Post("options/reset")
     resetOptions(){
         this.scraperService.updateOptions({
             reference_price_percentage: -1,
             item_min_price: 0,
             item_max_price: 1000000,
-            min_memory: 10,
+            min_memory: 8,
             sleep_ms: 0
         }
     )
