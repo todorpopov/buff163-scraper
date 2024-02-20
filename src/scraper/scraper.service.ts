@@ -13,7 +13,8 @@ export class ScraperService {
         reference_price_percentage: -1,
         item_min_price: 0,
         item_max_price: 1000000,
-        min_memory: 10
+        min_memory: 10,
+        sleep_ms: 0,
     }
 
     updateOptions(newOptions){
@@ -120,6 +121,7 @@ export class ScraperService {
     async scrapeArray(array, proxy){
         for(const item of array){
             await this.scrapePage(item, proxy)
+            await sleep(this.options.sleep_ms)
         }
     }
 
@@ -130,7 +132,7 @@ export class ScraperService {
         console.log("\nFetched latest stickers!")
     }
 
-    @Cron("*/18 * * * *")
+    @Cron("*/20 * * * *")
     startQueue(){
         const queue = new QueueService()
 

@@ -56,8 +56,10 @@ export class ScraperController {
             reference_price_percentage: -1,
             item_min_price: 0,
             item_max_price: 1000000,
-            min_memory: 10
-        })
+            min_memory: 10,
+            sleep_ms: 0
+        }
+    )
         return { msg: "Options reset successfully!"}
     }
 
