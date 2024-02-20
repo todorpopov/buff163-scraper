@@ -54,10 +54,10 @@ export class ScraperService {
             agent: proxyAgent
         }
 
-        let pageData: any = await fetch(itemLink, options).then(res => res.text()).catch(err => {
+        let pageData: any = await fetch(itemLink, options).then(res => res.text()).catch(error => {
             this.errors++
             this.errorItemCodes.push(itemObject.code)
-            console.error('error - 1: ' + err)
+            console.error(error)
         })
         
         let itemsArray: any[]
@@ -119,10 +119,6 @@ export class ScraperService {
     }
     
     async scrapeArray(array: any[], proxy: string){
-        if(this.stickerCache.length === 0){
-            await this.fetchStickerPrices()
-        }
-
         for(const item of array){
             await this.scrapePage(item, proxy)
             await sleep(this.options.sleep_ms)
@@ -136,8 +132,11 @@ export class ScraperService {
         console.log("\nFetched latest stickers!")
     }
 
-    @Cron("*/20 * * * *")
-    startQueue(){
+    async startQueue(){
+        if(this.stickerCache.length === 0){
+            await this.fetchStickerPrices()
+        }
+
         const queue = new QueueService()
 
         const chunkSize = proxies.length
@@ -145,10 +144,14 @@ export class ScraperService {
 
         if(array.length !== chunkSize){return { msg: "An error occured!"}}
 
-        console.log("Queue has been started!")
+        
+        let promises = []
         for(let i = 0; i < chunkSize; i++){
-            this.scrapeArray(array[i], proxies[i])
+            promises.push(this.scrapeArray(array[i], proxies[i]))
         }
+        
+        console.log("Queue has been started!")
+        await Promise.all(promises)
     }
 
     itemsSubject = new ReplaySubject()

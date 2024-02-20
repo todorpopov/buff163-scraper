@@ -32,12 +32,13 @@ export class ScraperController {
         return {msg: "Successfully fetched current sticker prices!"} 
     }
 
-    @ApiOperation({ summary: "Starts a queue of all items saved in the 'items.txt' file" })
+    @ApiOperation({ summary: "Starts an infinite scraping process" })
     // @UseGuards(AuthGuard)
-    @Get('queue')
-    queue(){
-        this.scraperService.startQueue()
-        return {msg: "Queue started successfully!"}
+    @Get('start')
+    async start(){
+        while(true){
+            await this.scraperService.startQueue()
+        }
     }
 
     @ApiOperation({ summary: 'Updates the server options (requires a JSON in the body param)' })
