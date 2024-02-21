@@ -12,7 +12,7 @@ export class ScraperService {
     options = {
         reference_price_percentage: -1,
         item_min_price: 0,
-        item_max_price: 1000000,
+        item_max_price: 1_000_000,
         min_memory: 8,
         sleep_ms: 0,
     }
@@ -21,19 +21,19 @@ export class ScraperService {
         this.options = newOptions
     }
 
-    async scrapePage(itemObject: any, proxy: string){
+    async scrapePage(itemObject: any, proxy: string){ // itemObject can be turned into itemCode. This way the queue could only consist of item codes to save some additional memory
         const start = performance.now()
 
-        if(this.stickerCache.length === 0){
+        if(this.stickerCache.length === 0){ // This check could be removed completely
             await this.fetchStickerPrices()
         }
 
         this.numberOfPages++
         
-        const itemLink = `https://buff.163.com/api/market/goods/sell_order?game=csgo&goods_id=${itemObject.code}&page_num=1`
+        const itemLink = `https://buff.163.com/api/market/goods/sell_order?game=csgo&goods_id=${itemObject.code}&page_num=1` // Can be extracted into a seperate function
         const proxyAgent = new HttpsProxyAgent(`http://${proxy}`)
 
-        const options = {
+        const options = { // Can be extracted into a seperate function
             headers: {
                 "accept": "application/json, text/javascript, */*; q=0.01",
                 "accept-language": "bg-BG,bg;q=0.9,en;q=0.8",

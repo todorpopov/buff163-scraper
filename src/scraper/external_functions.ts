@@ -59,8 +59,9 @@ export function stickerPriceFilter(itemObject: any, targetPercantage: number): b
 }
 
 export function checkStickerCache(array: any[], name: string): number{
+    name = `Sticker | ${name}`
     for(const item of array){
-        if(item.name.includes(name)){
+        if(item.name === name){
             return Number(item.price)
         }
     }
@@ -77,7 +78,6 @@ export function comparePrices(percentageTarget: number, referencePrice: number, 
     if(itemPrice < referencePrice || percentageTarget === -1){return true}
 
     const percentageDifference = (itemPrice / referencePrice) * 100
-    // console.log(percentageDifference)
 
     if(percentageDifference > percentageTarget){return false}
 
