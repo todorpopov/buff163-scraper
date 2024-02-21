@@ -16,11 +16,9 @@ export class ScraperController {
     getDataSse(@Param('filter') stickerFilter: string){
         if(!stickerFilter.match("[1-9][0-9]*")){
             return this.scraperService.itemsSubject
-            .pipe(distinct())
         }else {
             return this.scraperService.itemsSubject
             .pipe((filter(item => stickerPriceFilter(item['data'], Number(stickerFilter)))))
-            .pipe(distinct())
         }
     }
 

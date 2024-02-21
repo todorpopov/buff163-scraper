@@ -1,5 +1,6 @@
 import * as path from 'path'
 import * as fs from 'fs'
+import { ReplaySubject } from 'rxjs'
 
 export function randomNumber(min: number, max: number): number {
     min = Math.ceil(min)
@@ -18,7 +19,7 @@ export function parseFile(filename): any{
             const splitLine = splitLines[i].split(':')
             fileContent.push({
                 code: splitLine[0],
-                item_name: splitLine[1]
+                item_name: splitLine[1].replace(/(\r\n|\n|\r)/gm, "")
             })
         }
     } catch (err) {
@@ -113,4 +114,14 @@ export function uniqueErrors(array: any[]){
     const uniqueElements = [... new Set(array)]
 
     return { arrayLen: array.length, unique: uniqueElements.length }
+}
+
+export function isSaved(subject: ReplaySubject<any>, id: string){
+    let statement = false
+    subject.forEach(value => {
+        if(value.data.id === id){
+            statement = true
+        }
+    })
+    return statement
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { checkStickerCache, comparePrices, proxies, sleep } from './external_functions'
+import { checkStickerCache, comparePrices, isSaved, proxies, sleep } from './external_functions'
 import { ReplaySubject } from 'rxjs'
 import { Cron } from '@nestjs/schedule'
 import fetch from 'node-fetch'
@@ -54,7 +54,9 @@ export class ScraperService {
             agent: proxyAgent
         }
 
-        let pageData: any = await fetch(itemLink, options).then(res => res.text()).catch(error => {
+        let pageData: any = await fetch(itemLink, options) // This could be extracted into a seperate funtion
+        .then(res => res.text())
+        .catch(error => {
             this.errors++
             this.errorItemCodes.push(itemObject.code)
             console.error("\n" + error)
@@ -95,7 +97,7 @@ export class ScraperService {
 
 
             let itemName = itemObject.item_name
-            if(itemName.includes('StatTrak')){
+            if(itemName.includes('StatTrak')){ // This could be extracted into a seperate funtion
                 itemName = itemName.slice(10)
             }
 
@@ -163,8 +165,10 @@ export class ScraperService {
     numberOfPages = 0
 
     asignItem(item: any): void {
-        this.itemsSubject.next({data: item})
-        this.itemsNum++
+        if(!isSaved(this.itemsSubject, item.id)){
+            this.itemsSubject.next({data: item})
+            this.itemsNum++
+        }
     }
     
     @Cron("0 0 * * *")
