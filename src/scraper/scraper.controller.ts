@@ -15,7 +15,7 @@ export class ScraperController {
     }
 
     @ApiOperation({ summary: 'An observable SSE stream for storing the scraped items' })
-    // @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Sse("stream/filter=:filter")
     getDataSse(@Param('filter') stickerFilter: string){
         if(!stickerFilter.match("[1-9][0-9]*")){
@@ -27,7 +27,7 @@ export class ScraperController {
     }
 
     @ApiOperation({ summary: "Starts an infinite scraping process" })
-    // @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Post("start")
     async start(){
         this.stopScraping = false
@@ -41,7 +41,7 @@ export class ScraperController {
     }
 
     @ApiOperation({ summary: "Stops the infinite scraping process" })
-    // @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Post("stop")
     stop(){
         this.stopScraping = true
@@ -50,7 +50,7 @@ export class ScraperController {
     }
 
     @ApiOperation({ summary: 'Updates the server options (requires a JSON in the body param)' })
-    // @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Post("options/update")
     updateOptions(@Body() newOptions: Options){
         this.scraperService.updateOptions(newOptions)
@@ -58,7 +58,7 @@ export class ScraperController {
     }
 
     @ApiOperation({ summary: 'Resets all server options to their defaults' })
-    // @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Post("options/reset")
     resetOptions(){
         this.scraperService.updateOptions({
@@ -73,7 +73,7 @@ export class ScraperController {
     }
 
     @ApiOperation({ summary: 'Clears all saved data' })
-    // @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Get("clear")
     clearObservable(){
         this.scraperService.clearItems()
@@ -81,7 +81,7 @@ export class ScraperController {
     }
     
     @ApiOperation({ summary: "Get server stats" })
-    // @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Get("stats")
     stats(){
         return this.scraperService.stats

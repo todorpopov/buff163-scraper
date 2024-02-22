@@ -48,7 +48,7 @@ export class ScraperService implements OnModuleInit {
             total_errors: 0,
             property_undefined_errors: 0,
             request_errors: 0,
-            tmr_errors: 0,
+            too_many_reqests: 0,
         }
         this.stickerCache = []
         this.itemsSubject = new ReplaySubject<ObservableItem>()
@@ -74,7 +74,7 @@ export class ScraperService implements OnModuleInit {
         try{ // HTML handling
             pageData = JSON.parse(pageData)
         }catch(error){
-            this.errors.tmr_errors++
+            this.errors.too_many_reqests++
             console.log(`\n Couldn't parse the response into JSON (${itemCode})\n${error}`)
             return
         }
@@ -201,7 +201,7 @@ export class ScraperService implements OnModuleInit {
             total_errors: 0,
             property_undefined_errors: 0,
             request_errors: 0,
-            tmr_errors: 0,
+            too_many_reqests: 0,
         }
         this.numberOfPages = 0
 
@@ -215,10 +215,10 @@ export class ScraperService implements OnModuleInit {
         const memoryPercetage = (freeMemory / totalMemory) * 100
 
         const errors = {
-            total_errors: this.errors.property_undefined_errors + this.errors.request_errors + this.errors.tmr_errors,
+            total_errors: this.errors.property_undefined_errors + this.errors.request_errors + this.errors.too_many_reqests,
             property_undefined_errors: this.errors.property_undefined_errors,
             request_errors: this.errors.request_errors,
-            tmr_errors: this.errors.tmr_errors,
+            too_many_reqests: this.errors.too_many_reqests,
         }
 
         if(memoryPercetage < this.options.min_memory){
