@@ -1,24 +1,30 @@
 import { Injectable } from '@nestjs/common';
-import { parseFile, shuffleArray } from 'src/scraper/external_functions';
+import { parseItemsFile, parseProxiesFile, shuffleArray } from 'src/external/queue';
 
 @Injectable()
 export class QueueService {
     itemFileContent = []
+    proxies = []
+    arraysToScrape = []
 
     constructor() {
-        this.itemFileContent = parseFile('./src/files/items.txt')
+        this.itemFileContent = parseItemsFile()
+        this.proxies = parseProxiesFile()
+
         shuffleArray(this.itemFileContent)
+        this.divideQueue()
     }
 
-    divideQueue(numOfElems){
+    divideQueue(){
         const originalArraySize = this.itemFileContent.length
-        const chunkSize = originalArraySize / numOfElems
+        const chunkSize = originalArraySize / this.proxies.length
         const arrayOfArrays = []
 
         for (let i = 0; i < originalArraySize; i += chunkSize) {
             arrayOfArrays.push(this.itemFileContent.slice(i, i + chunkSize));
         }
 
-        return arrayOfArrays
+        this.arraysToScrape = arrayOfArrays
     }
+
 }

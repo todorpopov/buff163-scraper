@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Param, Post, Sse, UseGuards } from '@nestjs/common';
 import { ScraperService } from './scraper.service';
-import { distinct, filter } from 'rxjs';
+import { filter } from 'rxjs';
 import { AuthGuard } from '../auth/auth.guard';
-import { stickerPriceFilter, uniqueErrors } from './external_functions';
+import { stickerPriceFilter } from '../external/general';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('scraper')
@@ -28,7 +28,7 @@ export class ScraperController {
     @Post("start")
     async start(){
         this.stopScraping = false
-        console.log(`\nScraping process has been started:\nstopScraping: ${this.stopScraping}`)
+        console.log(`\nScraping process has been started:\n\tstopScraping: ${this.stopScraping}`)
         while(true){
             if(this.stopScraping){
                 break
@@ -42,7 +42,7 @@ export class ScraperController {
     @Post("stop")
     stop(){
         this.stopScraping = true
-        console.log(`\nScraping process has been stopped:\nstopScraping: ${this.stopScraping}`)
+        console.log(`\nScraping process has been stopped:\n\tstopScraping: ${this.stopScraping}`)
         return { msg: "Scraping has been stoped sucessfully!" }
     }
 
@@ -82,12 +82,5 @@ export class ScraperController {
     @Get("stats")
     stats(){
         return this.scraperService.stats
-    }
-
-    @ApiOperation({ summary: "Returns an array of all item codes that returned errors during scraping" })
-    @Get("error_codes")
-    // @UseGuards(AuthGuard)
-    getErrorCodes(){
-        return uniqueErrors(this.scraperService.errorItemCodes)
     }
 }

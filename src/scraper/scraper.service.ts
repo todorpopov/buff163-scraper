@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common'
-import { checkStickerCache, comparePrices, isSaved, proxies, sleep } from './external_functions'
+import { Injectable, OnModuleInit } from '@nestjs/common'
+import { comparePrices, editItemStickers, getItemOfferURL, getItemURL, getRequestHeaders, isSaved, parseItemName, sleep } from '../external/general'
 import { ReplaySubject } from 'rxjs'
 import { Cron } from '@nestjs/schedule'
 import fetch from 'node-fetch'
@@ -8,98 +8,105 @@ import { QueueService } from 'src/queue/queue.service'
 const os = require('os')
 
 @Injectable()
-export class ScraperService {
+export class ScraperService implements OnModuleInit {
+    async onModuleInit() {
+        await this.fetchStickerPrices()
+    }
+
     options = {
-        reference_price_percentage: -1,
+        max_reference_price_percentage: -1,
         item_min_price: 0,
         item_max_price: 1_000_000,
         min_memory: 8,
         sleep_ms: 0,
     }
 
-    updateOptions(newOptions: any){
-        this.options = newOptions
-    }
+    stickerCache = []
 
-    async scrapePage(itemObject: any, proxy: string){ // itemObject can be turned into itemCode. This way the queue could only consist of item codes to save some additional memory
+    itemsSubject = new ReplaySubject()
+    itemsNum = 0
+
+    stopScraping = false
+    
+    scrapingTime = []
+    propertyUndefinedErrors = 0 // Errors that occur trying to access an undefined property of the JSON response
+    requestErrors = 0 // All errors that occur during the fetch
+    rateLimitErrors = 0 // Only requests that return status code - "429"
+    numberOfPages = 0
+
+    stats = {}
+    
+    async scrapePage(itemCode: string, proxy: string){
         const start = performance.now()
-
-        if(this.stickerCache.length === 0){ // This check could be removed completely
-            await this.fetchStickerPrices()
-        }
-
         this.numberOfPages++
         
-        const itemLink = `https://buff.163.com/api/market/goods/sell_order?game=csgo&goods_id=${itemObject.code}&page_num=1` // Can be extracted into a seperate function
+        const itemLink = getItemURL(itemCode)
+
         const proxyAgent = new HttpsProxyAgent(`http://${proxy}`)
+        const options = getRequestHeaders(proxyAgent)
 
-        const options = { // Can be extracted into a seperate function
-            headers: {
-                "accept": "application/json, text/javascript, */*; q=0.01",
-                "accept-language": "bg-BG,bg;q=0.9,en;q=0.8",
-                "sec-ch-ua": "\"Not A(Brand\";v=\"99\", \"Google Chrome\";v=\"121\", \"Chromium\";v=\"121\"",
-                "sec-ch-ua-mobile": "?0",
-                "sec-ch-ua-platform": "\"Windows\"",
-                "sec-fetch-dest": "empty",
-                "sec-fetch-mode": "cors",
-                "sec-fetch-site": "same-origin",
-                "x-requested-with": "XMLHttpRequest"
-            },
-            referrer: "https://buff.163.com/goods/35286",
-            referrerPolicy: "strict-origin-when-cross-origin",
-            body: null,
-            method: "GET",
-            mode: "cors",
-            credentials: "include",
-            agent: proxyAgent
-        }
-
-        let pageData: any = await fetch(itemLink, options) // This could be extracted into a seperate funtion
-        .then(res => res.text())
-        .catch(error => {
-            this.errors++
-            this.errorItemCodes.push(itemObject.code)
-            console.error("\n" + error)
+        let pageData: any = await fetch(itemLink, options).then(res => res.text()).catch(error => {
+            this.requestErrors++
+            console.error(`\n${itemCode}: ${error}`)
         })
         
-        let itemsArray: any[]
-        let itemReferencePrice: number
-        let itemImgURL: string
-        try{
+        try{ // HTML handling
             pageData = JSON.parse(pageData)
-            itemsArray = pageData.data.items
-            itemReferencePrice = Number(pageData.data.goods_infos[`${itemObject.code}`].steam_price_cny)
-            itemImgURL = pageData.data.goods_infos[`${itemObject.code}`].icon_url
         }catch(error){
-            console.log("\n" + itemObject.code + ': ' + error)
-            this.errors++
-            this.errorItemCodes.push(itemObject.code)
+            this.rateLimitErrors++
+            console.log(`\n Couldn't parse the response into JSON (${itemCode})\n${error}`)
+            return
+        }
+        
+        let itemReferencePrice: number
+        try{ // Get the reference price of the item
+            itemReferencePrice = Number(pageData.data.goods_infos[`${itemCode}`].steam_price_cny)
+        }catch(error){
+            this.propertyUndefinedErrors++
+            console.log(`\n Reference price property is undefined (${itemCode})\n${error}`)
+            return
+        }
+        
+        let itemName: string
+        try{ // Get the name of the item
+            itemName = parseItemName(pageData.data.goods_infos[`${itemCode}`].name)            
+        }catch(error){
+            this.propertyUndefinedErrors++
+            console.log(`\n Name property is undefined (${itemCode})\n${error}`)
+            return
+        }
+        
+        let itemImgURL: string
+        try{ // Get the item image URL
+            itemImgURL = pageData.data.goods_infos[`${itemCode}`].icon_url
+        }catch(error){
+            this.propertyUndefinedErrors++
+            console.log(`\n Image URL property is undefined (${itemCode})\n${error}`)
             return
         }
 
+        let itemsArray: any[]
+        try{ // Get the item array
+            itemsArray = pageData.data.items
+        }catch(error){
+            this.propertyUndefinedErrors++
+            console.log(`\n Items property is undefined (${itemCode})\n${error}`)
+            return
+        }
 
-        itemsArray.forEach(item => {
+        itemsArray.map(item => {
             const itemPrice = Number(item.price)
 
-            if(itemPrice < this.options.item_min_price || itemPrice > this.options.item_max_price){return}
+            const isPriceNotInRange = itemPrice < this.options.item_min_price || itemPrice > this.options.item_max_price
+            if(isPriceNotInRange){return} // Go to the next item if the current one's price is out of the options' range
 
-            const priceDifferenceStatement = comparePrices(this.options.reference_price_percentage, itemReferencePrice, itemPrice)
-            if(priceDifferenceStatement !== true){return}
+            const priceToReferencePrice = comparePrices(this.options.max_reference_price_percentage, itemReferencePrice, itemPrice)
+            if(!priceToReferencePrice){return} // Go to the next item if the current one's price is more than x% over the reference price
 
-            const itemStickers = item.asset_info.info.stickers
-            if(itemStickers.length === 0){return}
+            let itemStickers = item.asset_info.info.stickers
+            if(itemStickers.length === 0){return} // Go to the next item if the current one has no stickers
             
-            itemStickers.forEach(async(sticker) => {
-                delete sticker.category
-                delete sticker.sticker_id
-                sticker.price = checkStickerCache(this.stickerCache, sticker.name)
-            })
-
-
-            let itemName = itemObject.item_name
-            if(itemName.includes('StatTrak')){ // This could be extracted into a seperate funtion
-                itemName = itemName.slice(10)
-            }
+            itemStickers = editItemStickers(this.stickerCache, itemStickers) // Remove unnecessary properties from each sticker object and add its price
 
             const newItemObject = {
                 id: item.asset_info.assetid,
@@ -109,7 +116,7 @@ export class ScraperService {
                 reference_price: itemReferencePrice,
                 number_of_stickers: itemStickers.length,
                 stickers: itemStickers,
-                item_offer_url: `https://buff.163.com/shop/${item.user_id}#tab=selling&game=csgo&page_num=1&search=${itemName.replaceAll(' ', '%20')}`,
+                item_offer_url: getItemOfferURL(item.user_id, itemName),
                 paintwear: item.asset_info.paintwear
             }
 
@@ -120,49 +127,37 @@ export class ScraperService {
         this.scrapingTime.push((end - start))
     }
     
-    async scrapeArray(array: any[], proxy: string){
+    async fetchStickerPrices(){
+        const stickerURI = "https://stickers-server-adjsr.ondigitalocean.app/array"
+        this.stickerCache = await fetch(stickerURI, {method: 'GET'})
+        .then(res => res.json())
+        .catch(error => {
+            this.requestErrors++
+            console.error(`\nError during stickers fetch: ${error}`)
+        })
+        console.log("\nFetched latest stickers!")
+    }
+
+    async scrapeArray(array: Array<string>, proxy: string){
         for(const item of array){
             await this.scrapePage(item, proxy)
             await sleep(this.options.sleep_ms)
         }
     }
 
-    stickerCache = []
-    async fetchStickerPrices(){
-        const stickerURI = "https://stickers-server-adjsr.ondigitalocean.app/array"
-        this.stickerCache = await fetch(stickerURI, {method: 'GET'}).then(res => res.json()).catch(err => console.error('\nerror - stickers fetch: ' + err))
-        console.log("\nFetched latest stickers!")
-    }
-
     async startQueue(){
-        if(this.stickerCache.length === 0){
-            await this.fetchStickerPrices()
-        }
-
         const queue = new QueueService()
-
-        const chunkSize = proxies.length
-        const array = queue.divideQueue(chunkSize)
-
-        if(array.length !== chunkSize){return { msg: "An error occured!"}}
-
+        const proxies = queue.proxies
+        const arraysToScrape = queue.arraysToScrape
         
         let promises = []
-        for(let i = 0; i < chunkSize; i++){
-            promises.push(this.scrapeArray(array[i], proxies[i]))
+        for(let i = 0; i < proxies.length; i++){
+            promises.push(this.scrapeArray(arraysToScrape[i], proxies[i]))
         }
         
         console.log("\nQueue has been started!")
         await Promise.all(promises)
     }
-
-    itemsSubject = new ReplaySubject()
-    itemsNum = 0
-    
-    scrapingTime = []
-    errors = 0
-    errorItemCodes = []
-    numberOfPages = 0
 
     asignItem(item: any): void {
         if(!isSaved(this.itemsSubject, item.id)){
@@ -170,8 +165,11 @@ export class ScraperService {
             this.itemsNum++
         }
     }
+
+    updateOptions(newOptions: any){
+        this.options = newOptions
+    }
     
-    @Cron("0 0 * * *")
     clearItems(): void {
         this.itemsSubject.complete()
         this.itemsSubject = new ReplaySubject()
@@ -181,19 +179,28 @@ export class ScraperService {
         this.stats = {}
 
         this.scrapingTime = []
-        this.errors = 0
-        this.errorItemCodes = []
+
+        this.propertyUndefinedErrors = 0
+        this.requestErrors = 0
+        this.rateLimitErrors = 0
+
         this.numberOfPages = 0
 
         console.log(`\nItems and Logs have been cleared!`)
     }
 
-    stats = {}
     @Cron("*/1 * * * * *")
     getStats(){
         const freeMemory = Math.round(os.freemem() / 1024 / 1024)
         const totalMemory = Math.round(os.totalmem() / 1024 / 1024)
         const memoryPercetage = (freeMemory / totalMemory) * 100
+
+        const errors = {
+            total_errors: this.propertyUndefinedErrors + this.requestErrors + this.rateLimitErrors,
+            property_undefined_errors: this.propertyUndefinedErrors,
+            request_errors: this.requestErrors,
+            "429_errors": this.rateLimitErrors,
+        }
 
         if(memoryPercetage < this.options.min_memory){
             this.clearItems()
@@ -204,7 +211,7 @@ export class ScraperService {
             number_of_items: this.itemsNum,
             pages_scraped: this.numberOfPages,
             average_scrape_time_ms: (this.scrapingTime.reduce((a, b) => a + b, 0) / this.scrapingTime.length).toFixed(2),
-            errors: this.errors,
+            errors: errors,
             free_memory: freeMemory,
             free_memory_percentage: memoryPercetage,
             total_memory: totalMemory,
