@@ -2,8 +2,9 @@ import { Body, Controller, Get, Param, Post, Sse, UseGuards } from '@nestjs/comm
 import { ScraperService } from './scraper.service';
 import { filter } from 'rxjs';
 import { AuthGuard } from '../auth/auth.guard';
-import { stickerPriceFilter } from '../external/general';
+import { stickerPriceFilter } from '../external/scraper';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Options } from 'src/types/options.type';
 
 @ApiTags('scraper')
 @Controller('scraper')
@@ -49,7 +50,7 @@ export class ScraperController {
     @ApiOperation({ summary: 'Updates the server options (requires a JSON in the body param)' })
     // @UseGuards(AuthGuard)
     @Post("options/update")
-    updateOptions(@Body() newOptions){
+    updateOptions(@Body() newOptions: Options){
         this.scraperService.updateOptions(newOptions)
         return { msg: "Options updated successfully!"}
     }

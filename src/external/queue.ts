@@ -33,7 +33,7 @@ export function parseProxiesFile(){
     return fileContent
 }
 
-export function shuffleArray(array: any[]) {
+export function shuffleItemCodesArray(array: Array<string>) {
     let currentIndex = array.length,  randomIndex;
   
     while (currentIndex > 0) {

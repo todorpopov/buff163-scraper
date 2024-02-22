@@ -1,41 +1,62 @@
 import { Injectable, OnModuleInit } from '@nestjs/common'
-import { comparePrices, editItemStickers, getItemOfferURL, getItemURL, getRequestHeaders, isSaved, parseItemName, sleep } from '../external/general'
+import { comparePrices, editItemStickers, getItemOfferURL, getItemURL, getRequestHeaders, isSaved, parseItemName } from '../external/scraper'
+import { sleep } from '../external/general'
 import { ReplaySubject } from 'rxjs'
 import { Cron } from '@nestjs/schedule'
 import fetch from 'node-fetch'
 import { HttpsProxyAgent } from 'https-proxy-agent'
 import { QueueService } from 'src/queue/queue.service'
+import { Item } from 'src/types/response.item.type'
+import { ObservableItem } from 'src/types/item.observable.type'
+import { Options } from 'src/types/options.type'
+import { CachedSticker } from 'src/types/sticker.cache.type'
+import { Error } from 'src/types/error.type'
+import { ServerStatistics } from 'src/types/statistics.type'
 const os = require('os')
 
 @Injectable()
 export class ScraperService implements OnModuleInit {
     async onModuleInit() {
         await this.fetchStickerPrices()
+
+        const env = process.env.ENV
+        if(env === "local"){
+            fetch(`http://localhost:3000/scraper/start`, { method: "POST"}).catch(err => console.error('\nServer start fetch: ' + err))
+        }else{
+            fetch("https://buff163scraper.aisoftware.bg/scraper/start", { method: "POST"}).catch(err => console.error('\nServer start fetch: ' + err))
+        } 
     }
 
-    options = {
-        max_reference_price_percentage: -1,
-        item_min_price: 0,
-        item_max_price: 1_000_000,
-        min_memory: 8,
-        sleep_ms: 0,
+    options: Options
+    stickerCache: Array<CachedSticker>
+    itemsSubject: ReplaySubject<ObservableItem>
+    itemsNum: number
+    scrapingTime: Array<number>
+    errors: Error
+    numberOfPages: number
+    stats: ServerStatistics
+    
+    constructor(){
+        this.options = {
+            max_reference_price_percentage: -1,
+            item_min_price: 0,
+            item_max_price: 1_000_000,
+            min_memory: 8,
+            sleep_ms: 0,
+        }
+        this.errors = {
+            total_errors: 0,
+            property_undefined_errors: 0,
+            request_errors: 0,
+            tmr_errors: 0,
+        }
+        this.stickerCache = []
+        this.itemsSubject = new ReplaySubject<ObservableItem>()
+        this.itemsNum = 0
+        this.scrapingTime = []
+        this.numberOfPages = 0
     }
 
-    stickerCache = []
-
-    itemsSubject = new ReplaySubject()
-    itemsNum = 0
-
-    stopScraping = false
-    
-    scrapingTime = []
-    propertyUndefinedErrors = 0 // Errors that occur trying to access an undefined property of the JSON response
-    requestErrors = 0 // All errors that occur during the fetch
-    rateLimitErrors = 0 // Only requests that return status code - "429"
-    numberOfPages = 0
-
-    stats = {}
-    
     async scrapePage(itemCode: string, proxy: string){
         const start = performance.now()
         this.numberOfPages++
@@ -46,14 +67,14 @@ export class ScraperService implements OnModuleInit {
         const options = getRequestHeaders(proxyAgent)
 
         let pageData: any = await fetch(itemLink, options).then(res => res.text()).catch(error => {
-            this.requestErrors++
+            this.errors.request_errors++
             console.error(`\n${itemCode}: ${error}`)
         })
         
         try{ // HTML handling
             pageData = JSON.parse(pageData)
         }catch(error){
-            this.rateLimitErrors++
+            this.errors.tmr_errors++
             console.log(`\n Couldn't parse the response into JSON (${itemCode})\n${error}`)
             return
         }
@@ -62,7 +83,7 @@ export class ScraperService implements OnModuleInit {
         try{ // Get the reference price of the item
             itemReferencePrice = Number(pageData.data.goods_infos[`${itemCode}`].steam_price_cny)
         }catch(error){
-            this.propertyUndefinedErrors++
+            this.errors.property_undefined_errors++
             console.log(`\n Reference price property is undefined (${itemCode})\n${error}`)
             return
         }
@@ -71,7 +92,7 @@ export class ScraperService implements OnModuleInit {
         try{ // Get the name of the item
             itemName = parseItemName(pageData.data.goods_infos[`${itemCode}`].name)            
         }catch(error){
-            this.propertyUndefinedErrors++
+            this.errors.property_undefined_errors++
             console.log(`\n Name property is undefined (${itemCode})\n${error}`)
             return
         }
@@ -80,7 +101,7 @@ export class ScraperService implements OnModuleInit {
         try{ // Get the item image URL
             itemImgURL = pageData.data.goods_infos[`${itemCode}`].icon_url
         }catch(error){
-            this.propertyUndefinedErrors++
+            this.errors.property_undefined_errors++
             console.log(`\n Image URL property is undefined (${itemCode})\n${error}`)
             return
         }
@@ -89,7 +110,7 @@ export class ScraperService implements OnModuleInit {
         try{ // Get the item array
             itemsArray = pageData.data.items
         }catch(error){
-            this.propertyUndefinedErrors++
+            this.errors.property_undefined_errors++
             console.log(`\n Items property is undefined (${itemCode})\n${error}`)
             return
         }
@@ -132,7 +153,7 @@ export class ScraperService implements OnModuleInit {
         this.stickerCache = await fetch(stickerURI, {method: 'GET'})
         .then(res => res.json())
         .catch(error => {
-            this.requestErrors++
+            this.errors.request_errors++
             console.error(`\nError during stickers fetch: ${error}`)
         })
         console.log("\nFetched latest stickers!")
@@ -159,9 +180,9 @@ export class ScraperService implements OnModuleInit {
         await Promise.all(promises)
     }
 
-    asignItem(item: any): void {
+    asignItem(item: Item): void {
         if(!isSaved(this.itemsSubject, item.id)){
-            this.itemsSubject.next({data: item})
+            this.itemsSubject.next({ data: item })
             this.itemsNum++
         }
     }
@@ -170,20 +191,18 @@ export class ScraperService implements OnModuleInit {
         this.options = newOptions
     }
     
-    clearItems(): void {
+    clearItems() {
         this.itemsSubject.complete()
-        this.itemsSubject = new ReplaySubject()
-
+        this.itemsSubject = new ReplaySubject<ObservableItem>()
         this.itemsNum = 0
-
-        this.stats = {}
-
+        this.stats
         this.scrapingTime = []
-
-        this.propertyUndefinedErrors = 0
-        this.requestErrors = 0
-        this.rateLimitErrors = 0
-
+        this.errors = {
+            total_errors: 0,
+            property_undefined_errors: 0,
+            request_errors: 0,
+            tmr_errors: 0,
+        }
         this.numberOfPages = 0
 
         console.log(`\nItems and Logs have been cleared!`)
@@ -196,10 +215,10 @@ export class ScraperService implements OnModuleInit {
         const memoryPercetage = (freeMemory / totalMemory) * 100
 
         const errors = {
-            total_errors: this.propertyUndefinedErrors + this.requestErrors + this.rateLimitErrors,
-            property_undefined_errors: this.propertyUndefinedErrors,
-            request_errors: this.requestErrors,
-            "429_errors": this.rateLimitErrors,
+            total_errors: this.errors.property_undefined_errors + this.errors.request_errors + this.errors.tmr_errors,
+            property_undefined_errors: this.errors.property_undefined_errors,
+            request_errors: this.errors.request_errors,
+            tmr_errors: this.errors.tmr_errors,
         }
 
         if(memoryPercetage < this.options.min_memory){

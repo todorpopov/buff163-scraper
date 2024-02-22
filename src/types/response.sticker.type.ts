@@ -1,4 +1,4 @@
-export type ResponseSticker = {
+export type Sticker = {
     category: string,
     img_url: string,
     name: string,
