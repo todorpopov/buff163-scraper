@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Sse, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, OnModuleInit, Param, Post, Sse, UseGuards } from '@nestjs/common';
 import { ScraperService } from './scraper.service';
 import { filter } from 'rxjs';
 import { AuthGuard } from '../auth/auth.guard';
@@ -8,7 +8,11 @@ import { Options } from 'src/types/options.type';
 
 @ApiTags('scraper')
 @Controller('scraper')
-export class ScraperController {
+export class ScraperController implements OnModuleInit {
+    async onModuleInit() {
+        this.start()
+    }
+
     stopScraping: boolean
     constructor(private readonly scraperService: ScraperService) {
         this.stopScraping = false
@@ -17,7 +21,7 @@ export class ScraperController {
     @ApiOperation({ summary: 'An observable SSE stream for storing the scraped items' })
     @UseGuards(AuthGuard)
     @Sse("stream/filter=:filter")
-    getDataSse(@Param('filter') stickerFilter: string){
+    getDataSse(@Param('filter') stickerFilter: string){ 
         if(!stickerFilter.match("[1-9][0-9]*")){
             return this.scraperService.itemsSubject
         }else {
@@ -62,7 +66,7 @@ export class ScraperController {
     @Post("options/reset")
     resetOptions(){
         this.scraperService.updateOptions({
-            reference_price_percentage: -1,
+            max_reference_price_percentage: -1,
             item_min_price: 0,
             item_max_price: 1000000,
             min_memory: 8,

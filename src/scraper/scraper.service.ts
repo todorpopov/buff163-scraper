@@ -18,13 +18,6 @@ const os = require('os')
 export class ScraperService implements OnModuleInit {
     async onModuleInit() {
         await this.fetchStickerPrices()
-
-        const currentEnvironment = process.env.ENV
-        if(currentEnvironment === "local"){
-            fetch(`http://localhost:3000/scraper/start`, { method: "POST"}).catch(error => console.error('\nServer start fetch: ' + error))
-        }else{
-            fetch("https://buff163scraper.aisoftware.bg/scraper/start", { method: "POST"}).catch(error => console.error('\nServer start fetch: ' + error))
-        }
     }
 
     options: Options
@@ -66,12 +59,12 @@ export class ScraperService implements OnModuleInit {
         const proxyAgent = new HttpsProxyAgent(`http://${proxy}`)
         const options = getRequestHeaders(proxyAgent)
 
-        let pageData: any = await fetch(itemLink, options).then(res => res.text()).catch(error => {
+        let pageData = await fetch(itemLink, options).then(res => res.text()).catch(error => {
             this.errors.request_errors++
             console.error(`\n${itemCode}: ${error}`)
         })
         
-        try{ // HTML handling
+        try{ // HTML handling (429 response)
             pageData = JSON.parse(pageData)
         }catch(error){
             this.errors.too_many_reqests++
@@ -106,7 +99,7 @@ export class ScraperService implements OnModuleInit {
             return
         }
 
-        let itemsArray: any[]
+        let itemsArray: Array<any> // This is "any" because the JSON response is unnecessarily large and complex to be represented as a type
         try{ // Get the item array
             itemsArray = pageData.data.items
         }catch(error){
@@ -148,6 +141,7 @@ export class ScraperService implements OnModuleInit {
         this.scrapingTime.push((end - start))
     }
     
+    @Cron("0 0 * * *")
     async fetchStickerPrices(){
         const stickerURI = "https://stickers-server-adjsr.ondigitalocean.app/array"
         this.stickerCache = await fetch(stickerURI, {method: 'GET'})
@@ -180,14 +174,14 @@ export class ScraperService implements OnModuleInit {
         await Promise.all(promises)
     }
 
-    asignItem(item: Item): void {
+    asignItem(item: Item) {
         if(!isSaved(this.itemsSubject, item.id)){
             this.itemsSubject.next({ data: item })
             this.itemsNum++
         }
     }
 
-    updateOptions(newOptions: any){
+    updateOptions(newOptions: Options){
         this.options = newOptions
     }
     
