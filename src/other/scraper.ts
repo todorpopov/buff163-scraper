@@ -7,8 +7,8 @@ import { ObservableItem } from 'src/types/item.observable.type'
 
 
 export function stickerPriceFilter(itemObject: Item, targetPercantage: number) {
-    const itemPrice = itemObject.price;
-    let stickersTotal = 0;
+    const itemPrice = itemObject.price
+    let stickersTotal = 0
 
     itemObject.stickers.forEach(sticker => {
         stickersTotal += sticker.price

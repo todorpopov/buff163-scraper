@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common'
-import { comparePrices, editItemStickers, getItemOfferURL, getItemURL, getRequestHeaders, isSaved, parseItemName } from '../external/scraper'
-import { sleep } from '../external/general'
+import { comparePrices, editItemStickers, getItemOfferURL, getItemURL, getRequestHeaders, isSaved, parseItemName } from '../other/scraper'
+import { sleep } from '../other/general'
 import { ReplaySubject } from 'rxjs'
 import { Cron } from '@nestjs/schedule'
 import fetch from 'node-fetch'
@@ -19,12 +19,12 @@ export class ScraperService implements OnModuleInit {
     async onModuleInit() {
         await this.fetchStickerPrices()
 
-        const env = process.env.ENV
-        if(env === "local"){
-            fetch(`http://localhost:3000/scraper/start`, { method: "POST"}).catch(err => console.error('\nServer start fetch: ' + err))
+        const currentEnvironment = process.env.ENV
+        if(currentEnvironment === "local"){
+            fetch(`http://localhost:3000/scraper/start`, { method: "POST"}).catch(error => console.error('\nServer start fetch: ' + error))
         }else{
-            fetch("https://buff163scraper.aisoftware.bg/scraper/start", { method: "POST"}).catch(err => console.error('\nServer start fetch: ' + err))
-        } 
+            fetch("https://buff163scraper.aisoftware.bg/scraper/start", { method: "POST"}).catch(error => console.error('\nServer start fetch: ' + error))
+        }
     }
 
     options: Options

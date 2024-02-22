@@ -2,14 +2,17 @@ import { Body, Controller, Get, Param, Post, Sse, UseGuards } from '@nestjs/comm
 import { ScraperService } from './scraper.service';
 import { filter } from 'rxjs';
 import { AuthGuard } from '../auth/auth.guard';
-import { stickerPriceFilter } from '../external/scraper';
+import { stickerPriceFilter } from '../other/scraper';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Options } from 'src/types/options.type';
 
 @ApiTags('scraper')
 @Controller('scraper')
 export class ScraperController {
-    constructor(private readonly scraperService: ScraperService) {}
+    stopScraping: boolean
+    constructor(private readonly scraperService: ScraperService) {
+        this.stopScraping = false
+    }
 
     @ApiOperation({ summary: 'An observable SSE stream for storing the scraped items' })
     // @UseGuards(AuthGuard)
@@ -23,7 +26,6 @@ export class ScraperController {
         }
     }
 
-    stopScraping = false
     @ApiOperation({ summary: "Starts an infinite scraping process" })
     // @UseGuards(AuthGuard)
     @Post("start")
@@ -65,8 +67,8 @@ export class ScraperController {
             item_max_price: 1000000,
             min_memory: 8,
             sleep_ms: 0
-        }
-    )
+        })
+
         return { msg: "Options reset successfully!"}
     }
 

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { parseItemsFile, parseProxiesFile, shuffleItemCodesArray } from 'src/external/queue';
+import { parseItemsFile, parseProxiesFile, shuffleItemCodesArray } from 'src/other/queue';
 
 @Injectable()
 export class QueueService {
@@ -26,5 +26,4 @@ export class QueueService {
 
         this.arraysToScrape = arrayOfArrays
     }
-
 }

@@ -5,7 +5,7 @@ export type Sticker = {
     slot: number,
     sticker_id: number,
     wear: number,
-    offset_x: number,
-    offset_y: number,
+    offset_x?: number,
+    offset_y?: number,
     price?: number
 }
