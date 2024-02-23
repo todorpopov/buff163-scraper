@@ -1,5 +1,9 @@
 import { Injectable, OnModuleInit } from '@nestjs/common'
-import { comparePriceToReferencePrice, editItemStickers, getItemOfferURL, getItemURL, getFetchOptions, isSaved, parseItemName } from '../other/scraper'
+import { 
+    priceToRefPricePercentage, editItemStickers, 
+    getItemOfferURL, getItemURL, getFetchOptions, 
+    isSaved, parseItemName, priceOutOfRange 
+} from '../other/scraper'
 import { sleep } from '../other/general'
 import { ReplaySubject } from 'rxjs'
 import { Cron } from '@nestjs/schedule'
@@ -110,16 +114,17 @@ export class ScraperService implements OnModuleInit {
         itemsArray.map(item => {
             const itemPrice = Number(item.price)
 
-            const priceNotInRange = itemPrice < this.options.item_min_price || itemPrice > this.options.item_max_price
-            if(priceNotInRange){return} // Go to the next item if the current one's price is out of the options' range
-
-            const priceToReferencePrice = comparePriceToReferencePrice(this.options.max_reference_price_percentage, itemReferencePrice, itemPrice)
-            if(!priceToReferencePrice){return} // Go to the next item if the current one's price is more than XXX% over the reference price
-
             let itemStickers = item.asset_info.info.stickers
             if(itemStickers.length === 0){return} // Go to the next item if the current one has no stickers
             
-            itemStickers = editItemStickers(this.stickersCache, itemStickers) // Remove unnecessary properties from each sticker object and add its price
+            // Go to the next item if the current one's price is out of the options' range
+            if(priceOutOfRange(this.options.item_min_price, this.options.item_max_price, itemPrice)){return} 
+
+            // Go to the next item if the current one's price is more than XXX% over the reference price
+            if(!priceToRefPricePercentage(this.options.max_reference_price_percentage, itemReferencePrice, itemPrice)){return}
+
+            // Remove unnecessary properties from each sticker object and add its price
+            itemStickers = editItemStickers(this.stickersCache, itemStickers) 
 
             this.appendItem({ 
                 id: item.asset_info.assetid,
@@ -201,26 +206,37 @@ export class ScraperService implements OnModuleInit {
 
     @Cron("*/1 * * * * *")
     getserverStats(){
-        const freeMemory = Math.round(os.freemem() / 1024 / 1024) // Get the free memory of the system
-        const totalMemory = Math.round(os.totalmem() / 1024 / 1024) // Get the total memory of the system 
-        const memoryPercetage = (freeMemory / totalMemory) * 100 // Calculate the free memory percentage of the system
+        // Get the free memory of the system
+        const freeMemory = Math.round(os.freemem() / 1024 / 1024) 
+        
+        // Get the total memory of the system 
+        const totalMemory = Math.round(os.totalmem() / 1024 / 1024)
 
+        // Calculate the free memory percentage of the system
+        const memoryPercetage = (freeMemory / totalMemory) * 100 
+
+        // Get average scraping time from the array
+        const averageScrapingTime = (this.scrapingTimesArray.reduce((a, b) => a + b, 0) / this.scrapingTimesArray.length).toFixed(2)
+        
         const errors = {
-            total_errors: this.errors.property_undefined_errors + this.errors.request_errors + this.errors.too_many_reqests,
+            total_errors: this.errors.property_undefined_errors + 
+                        this.errors.request_errors + 
+                        this.errors.too_many_reqests,
             property_undefined_errors: this.errors.property_undefined_errors,
             request_errors: this.errors.request_errors,
             too_many_reqests: this.errors.too_many_reqests,
         }
 
+        // Clear all items when the free memory percentage falls under the options threshold
         if(memoryPercetage < this.options.min_memory){ 
-            this.clearItems() // Clear all items when the free memory percentage falls under the options threshold
+            this.clearItems() 
         }
 
         const serverStats = {
             date: new Date().toString(),
             number_of_items: this.numberOfItems,
             pages_scraped: this.numberOfPages,
-            average_scrape_time_ms: (this.scrapingTimesArray.reduce((a, b) => a + b, 0) / this.scrapingTimesArray.length).toFixed(2), // Get average scraping time from the array
+            average_scrape_time_ms: averageScrapingTime,
             errors: errors,
             free_memory: freeMemory,
             free_memory_percentage: memoryPercetage,
