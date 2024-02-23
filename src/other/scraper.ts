@@ -36,7 +36,7 @@ function checkStickerCache(stickersCache: Array<CachedSticker>, name: string){
     return itemPrice
 }
 
-export function priceToRefPricePercentage(maxPercentageDifference: number, referencePrice: number, itemPrice: number){
+function priceToRefPricePercentage(maxPercentageDifference: number, referencePrice: number, itemPrice: number){
     if(itemPrice < referencePrice || maxPercentageDifference === -1){return true}
 
     const percentageDifference = (itemPrice / referencePrice) * 100
@@ -108,8 +108,27 @@ export function editItemStickers(stickerCache: Array<CachedSticker>, stickersArr
     return stickersArrayCopy
 }
 
-export function priceOutOfRange(min: number, max: number, price: number){
+function priceOutOfRange(min: number, max: number, price: number){
     if(price < min || price > max){return true}
     
     return false
+}
+
+export function checkItemProperties(numberOfStickers, minPrice, maxPrice, itemPrice, refPricePercentage, itemReferencePrice){
+    // Return false if the item has no stickers
+    if(numberOfStickers === 0){
+        return false
+    } 
+            
+    // Go to the next item if the current one's price is out of the options' range
+    if(priceOutOfRange(minPrice, maxPrice, itemPrice)){
+        return false
+    } 
+
+    // Go to the next item if the current one's price is more than XXX% over the reference price
+    if(!priceToRefPricePercentage(refPricePercentage, itemReferencePrice, itemPrice)){
+        return false
+    }
+
+    return true
 }

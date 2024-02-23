@@ -1,8 +1,8 @@
 import { Injectable, OnModuleInit } from '@nestjs/common'
 import { 
-    priceToRefPricePercentage, editItemStickers, 
-    getItemOfferURL, getItemURL, getFetchOptions, 
-    isSaved, parseItemName, priceOutOfRange 
+    editItemStickers, getItemOfferURL, 
+    getItemURL, getFetchOptions, isSaved, 
+    parseItemName, checkItemProperties 
 } from '../other/scraper'
 import { sleep } from '../other/general'
 import { ReplaySubject } from 'rxjs'
@@ -115,13 +115,12 @@ export class ScraperService implements OnModuleInit {
             const itemPrice = Number(item.price)
 
             let itemStickers = item.asset_info.info.stickers
-            if(itemStickers.length === 0){return} // Go to the next item if the current one has no stickers
-            
-            // Go to the next item if the current one's price is out of the options' range
-            if(priceOutOfRange(this.options.item_min_price, this.options.item_max_price, itemPrice)){return} 
+            const numberOfStickers = itemStickers.length
 
-            // Go to the next item if the current one's price is more than XXX% over the reference price
-            if(!priceToRefPricePercentage(this.options.max_reference_price_percentage, itemReferencePrice, itemPrice)){return}
+            const itemChecks = checkItemProperties(numberOfStickers, this.options.item_min_price, 
+                this.options.item_max_price, itemPrice, 
+                this.options.max_reference_price_percentage, itemReferencePrice)
+            if(!itemChecks){return}
 
             // Remove unnecessary properties from each sticker object and add its price
             itemStickers = editItemStickers(this.stickersCache, itemStickers) 
@@ -132,7 +131,7 @@ export class ScraperService implements OnModuleInit {
                 name: itemName,
                 price: itemPrice,
                 reference_price: itemReferencePrice,
-                number_of_stickers: itemStickers.length,
+                number_of_stickers: numberOfStickers,
                 stickers: itemStickers,
                 item_offer_url: getItemOfferURL(item.user_id, itemName),
                 paintwear: item.asset_info.paintwear
