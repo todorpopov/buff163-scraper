@@ -19,7 +19,7 @@ export class ScraperController implements OnModuleInit {
     }
 
     @ApiOperation({ summary: 'An observable SSE stream for storing the scraped items' })
-    // @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Sse("stream/filter=:filter")
     getDataSse(@Param('filter') stickerFilter: string){ 
         if(!stickerFilter.match("[1-9][0-9]*")){
@@ -96,7 +96,7 @@ export class ScraperController implements OnModuleInit {
     }
     
     @ApiOperation({ summary: "Get server stats" })
-    // @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Get("stats")
     stats(){
         return this.scraperService.serverStats
