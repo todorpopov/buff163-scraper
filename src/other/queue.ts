@@ -17,22 +17,6 @@ export function parseItemsFile(){
     return fileContent
 }
 
-export function parseProxiesFile(){
-    let fileContent = []
-
-    try{
-        const data = fs.readFileSync('./src/files/proxies.txt', 'utf8')
-        const splitLines = data.split('\n')
-        for(let i = 0; i < splitLines.length; i++) {
-            fileContent.push(splitLines[i].replaceAll('\r', ''))
-        }
-    }catch(error){
-        console.error(error);
-    }
-
-    return fileContent
-}
-
 export function shuffleItemCodesArray(array: Array<string>) {
     let currentIndex = array.length,  randomIndex;
   

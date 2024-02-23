@@ -35,7 +35,7 @@ function checkStickerCache(array: Array<CachedSticker>, name: string){
     return 0
 }
 
-export function comparePrices(maxPercentageDifference: number, referencePrice: number, itemPrice: number){
+export function comparePriceToReferencePrice(maxPercentageDifference: number, referencePrice: number, itemPrice: number){
     if(itemPrice < referencePrice || maxPercentageDifference === -1){return true}
 
     const percentageDifference = (itemPrice / referencePrice) * 100
@@ -59,7 +59,7 @@ export function getItemURL(itemCode: string){
     return `https://buff.163.com/api/market/goods/sell_order?game=csgo&goods_id=${itemCode}&page_num=1`
 }
 
-export function getRequestHeaders(proxyAgent: HttpsProxyAgent<string>){
+export function getRequestOptions(proxyAgent: HttpsProxyAgent<string>){
     return {
         headers: {
             "accept": "application/json, text/javascript, */*; q=0.01",

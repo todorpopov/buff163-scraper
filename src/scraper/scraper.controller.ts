@@ -30,12 +30,12 @@ export class ScraperController implements OnModuleInit {
         }
     }
 
-    @ApiOperation({ summary: "Starts an infinite scraping process" })
+    @ApiOperation({ summary: "Starts an infinite scraping process!" })
     @UseGuards(AuthGuard)
     @Post("start")
     async start(){
         this.stopScraping = false
-        console.log(`\nScraping process has been started:\n\tstopScraping: ${this.stopScraping}`)
+        console.log("\nScraping process has been started")
         while(true){
             if(this.stopScraping){
                 break
@@ -44,13 +44,24 @@ export class ScraperController implements OnModuleInit {
         }
     }
 
-    @ApiOperation({ summary: "Stops the infinite scraping process" })
+    @ApiOperation({ summary: "Stops the infinite scraping process!" })
     @UseGuards(AuthGuard)
     @Post("stop")
     stop(){
         this.stopScraping = true
         console.log(`\nScraping process has been stopped:\n\tstopScraping: ${this.stopScraping}`)
         return { msg: "Scraping has been stoped sucessfully!" }
+    }
+
+    @ApiOperation({ summary: "Get current status of the scraping process" })
+    @UseGuards(AuthGuard)
+    @Get("status")
+    getScrapingStatus(){
+        if(this.stopScraping){
+            return { msg: "Scraping process has been turned off and will stop after the current queue has been complete!" }
+        }else{
+            return { msg: "Scraping process is running" }
+        }
     }
 
     @ApiOperation({ summary: 'Updates the server options (requires a JSON in the body param)' })

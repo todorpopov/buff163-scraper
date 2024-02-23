@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common'
-import { comparePrices, editItemStickers, getItemOfferURL, getItemURL, getRequestHeaders, isSaved, parseItemName } from '../other/scraper'
+import { comparePriceToReferencePrice, editItemStickers, getItemOfferURL, getItemURL, getRequestOptions, isSaved, parseItemName } from '../other/scraper'
 import { sleep } from '../other/general'
 import { ReplaySubject } from 'rxjs'
 import { Cron } from '@nestjs/schedule'
@@ -54,17 +54,16 @@ export class ScraperService implements OnModuleInit {
         const start = performance.now()
         this.numberOfPages++
         
-        const itemLink = getItemURL(itemCode)
-
+        const itemURL = getItemURL(itemCode)
         const proxyAgent = new HttpsProxyAgent(`http://${proxy}`)
-        const options = getRequestHeaders(proxyAgent)
+        const fetchOptions = getRequestOptions(proxyAgent)
 
-        let pageData = await fetch(itemLink, options).then(res => res.text()).catch(error => {
+        let pageData = await fetch(itemURL, fetchOptions).then(res => res.text()).catch(error => {
             this.errors.request_errors++
             console.error(`\n${itemCode}: ${error}`)
         })
         
-        try{ // HTML handling (429 response)
+        try{ // HTML handling (mostly 429 response or proxies not working)
             pageData = JSON.parse(pageData)
         }catch(error){
             this.errors.too_many_reqests++
@@ -111,10 +110,10 @@ export class ScraperService implements OnModuleInit {
         itemsArray.map(item => {
             const itemPrice = Number(item.price)
 
-            const isPriceNotInRange = itemPrice < this.options.item_min_price || itemPrice > this.options.item_max_price
-            if(isPriceNotInRange){return} // Go to the next item if the current one's price is out of the options' range
+            const priceNotInRange = itemPrice < this.options.item_min_price || itemPrice > this.options.item_max_price
+            if(priceNotInRange){return} // Go to the next item if the current one's price is out of the options' range
 
-            const priceToReferencePrice = comparePrices(this.options.max_reference_price_percentage, itemReferencePrice, itemPrice)
+            const priceToReferencePrice = comparePriceToReferencePrice(this.options.max_reference_price_percentage, itemReferencePrice, itemPrice)
             if(!priceToReferencePrice){return} // Go to the next item if the current one's price is more than x% over the reference price
 
             let itemStickers = item.asset_info.info.stickers
@@ -143,8 +142,8 @@ export class ScraperService implements OnModuleInit {
     
     @Cron("0 0 * * *")
     async fetchStickerPrices(){
-        const stickerURI = "https://stickers-server-adjsr.ondigitalocean.app/array"
-        this.stickerCache = await fetch(stickerURI, {method: 'GET'})
+        const stickerCacheURL = "https://stickers-server-adjsr.ondigitalocean.app/array"
+        this.stickerCache = await fetch(stickerCacheURL, {method: 'GET'})
         .then(res => res.json())
         .catch(error => {
             this.errors.request_errors++

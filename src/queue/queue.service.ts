@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { parseItemsFile, parseProxiesFile, shuffleItemCodesArray } from 'src/other/queue';
+import { parseItemsFile, shuffleItemCodesArray } from 'src/other/queue';
 
 @Injectable()
 export class QueueService {
@@ -9,7 +9,7 @@ export class QueueService {
 
     constructor() {
         this.itemFileContent = parseItemsFile()
-        this.proxies = parseProxiesFile()
+        this.proxies = process.env.PROXIES.split(" ")
 
         shuffleItemCodesArray(this.itemFileContent)
         this.divideQueue()
