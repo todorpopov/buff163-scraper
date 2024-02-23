@@ -37,7 +37,7 @@ function checkStickerCache(stickersCache: Array<CachedSticker>, name: string){
 }
 
 function priceToRefPricePercentage(maxPercentageDifference: number, referencePrice: number, itemPrice: number){
-    if(itemPrice < referencePrice || maxPercentageDifference === -1){return true}
+    if(referencePrice === 0 || itemPrice < referencePrice || maxPercentageDifference === -1){return true}
 
     const percentageDifference = (itemPrice / referencePrice) * 100
 

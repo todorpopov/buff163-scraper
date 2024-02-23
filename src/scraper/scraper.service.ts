@@ -81,8 +81,8 @@ export class ScraperService implements OnModuleInit {
             itemReferencePrice = Number(pageData.data.goods_infos[`${itemCode}`].steam_price_cny)
         }catch(error){
             this.errors.property_undefined_errors++
+            itemReferencePrice = 0
             console.error(`\n${itemCode}: ${error}`)
-            return
         }
         
         let itemName: string
@@ -117,9 +117,7 @@ export class ScraperService implements OnModuleInit {
             let itemStickers = item.asset_info.info.stickers
             const numberOfStickers = itemStickers.length
 
-            const itemChecks = checkItemProperties(numberOfStickers, this.options.item_min_price, 
-                this.options.item_max_price, itemPrice, 
-                this.options.max_reference_price_percentage, itemReferencePrice)
+            const itemChecks = checkItemProperties(numberOfStickers, this.options.item_min_price, this.options.item_max_price, itemPrice, this.options.max_reference_price_percentage, itemReferencePrice)
             if(!itemChecks){return}
 
             // Remove unnecessary properties from each sticker object and add its price
