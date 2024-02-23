@@ -1,9 +1,9 @@
 import { ReplaySubject } from 'rxjs'
 import { HttpsProxyAgent } from 'https-proxy-agent'
-import { Sticker } from 'src/types/response.sticker.type'
-import { CachedSticker } from 'src/types/sticker.cache.type'
-import { Item } from 'src/types/response.item.type'
-import { ObservableItem } from 'src/types/item.observable.type'
+import { Sticker } from 'src/types/response.sticker'
+import { CachedSticker } from 'src/types/sticker.cache'
+import { Item } from 'src/types/item'
+import { ObservableItem } from 'src/types/item.observable'
 
 
 export function stickerPriceFilter(itemObject: Item, targetPercantage: number) {
@@ -25,14 +25,15 @@ export function stickerPriceFilter(itemObject: Item, targetPercantage: number) {
     return false
 }
 
-function checkStickerCache(array: Array<CachedSticker>, name: string){
+function checkStickerCache(stickersCache: Array<CachedSticker>, name: string){
     name = `Sticker | ${name}`
-    for(const item of array){
+    let itemPrice = 0
+    stickersCache.forEach(item => {
         if(item.name === name){
-            return Number(item.price)
+            itemPrice = Number(item.price)
         }
-    }
-    return 0
+    })
+    return itemPrice
 }
 
 export function comparePriceToReferencePrice(maxPercentageDifference: number, referencePrice: number, itemPrice: number){
@@ -59,7 +60,7 @@ export function getItemURL(itemCode: string){
     return `https://buff.163.com/api/market/goods/sell_order?game=csgo&goods_id=${itemCode}&page_num=1`
 }
 
-export function getRequestOptions(proxyAgent: HttpsProxyAgent<string>){
+export function getFetchOptions(proxyAgent: HttpsProxyAgent<string>){
     return {
         headers: {
             "accept": "application/json, text/javascript, */*; q=0.01",
@@ -72,7 +73,7 @@ export function getRequestOptions(proxyAgent: HttpsProxyAgent<string>){
             "sec-fetch-site": "same-origin",
             "x-requested-with": "XMLHttpRequest"
         },
-        referrer: "https://buff.163.com/goods/35286",
+        //referrer: "https://buff.163.com/goods/",
         referrerPolicy: "strict-origin-when-cross-origin",
         body: null,
         method: "GET",

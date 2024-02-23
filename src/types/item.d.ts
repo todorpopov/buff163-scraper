@@ -1,4 +1,4 @@
-import { Sticker } from "./response.sticker.type"
+import { Sticker } from "./response.sticker"
 
 export type Item = {
     id: string,

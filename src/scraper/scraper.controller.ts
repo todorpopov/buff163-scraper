@@ -4,7 +4,7 @@ import { filter } from 'rxjs';
 import { AuthGuard } from '../auth/auth.guard';
 import { stickerPriceFilter } from '../other/scraper';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Options } from 'src/types/options.type';
+import { Options } from 'src/types/options';
 
 @ApiTags('scraper')
 @Controller('scraper')
@@ -13,7 +13,7 @@ export class ScraperController implements OnModuleInit {
         this.start()
     }
 
-    stopScraping: boolean
+    stopScraping: boolean // A variable to manage the scraping process through endpoints
     constructor(private readonly scraperService: ScraperService) {
         this.stopScraping = false
     }
@@ -37,7 +37,7 @@ export class ScraperController implements OnModuleInit {
         this.stopScraping = false
         console.log("\nScraping process has been started")
         while(true){
-            if(this.stopScraping){
+            if(this.stopScraping){ // Stop the scraping when "stopScraping" is set to "true"
                 break
             }
             await this.scraperService.startQueue()
@@ -99,6 +99,6 @@ export class ScraperController implements OnModuleInit {
     @UseGuards(AuthGuard)
     @Get("stats")
     stats(){
-        return this.scraperService.stats
+        return this.scraperService.serverStats
     }
 }

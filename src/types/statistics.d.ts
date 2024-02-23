@@ -1,5 +1,5 @@
-import { Error } from "./error.type"
-import { Options } from "./options.type"
+import { Error } from "./error"
+import { Options } from "./options"
 
 export type ServerStatistics = {
     date: string,

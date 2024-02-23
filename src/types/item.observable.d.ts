@@ -1,4 +1,4 @@
-import { Item } from "./response.item.type"
+import { Item } from "./item"
 
 export type ObservableItem = {
     id?: number,
