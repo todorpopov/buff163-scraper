@@ -1,30 +1,21 @@
 import * as fs from 'fs'
 
-export function parseItemsFile(){
-    const fileContent = []
-
+export function parseItemCodesFile(){
     try{
-        const data = fs.readFileSync('./src/files/items.txt', 'utf8')
-        const splitLines = data.split('\n')
-        for(let i = 0; i < splitLines.length; i++) {
-            const splitLine = splitLines[i].split(':')
-            fileContent.push(splitLine[0])
-        }
+        const data = fs.readFileSync('./src/files/item-codes.txt', 'utf8')
+        return data.split('|')
     }catch(error){
-        console.error(error);
+        console.error(error)
     }
-
-    return fileContent
 }
 
 export function shuffleItemCodesArray(array: Array<string>) {
-    let currentIndex = array.length,  randomIndex;
+    let currentIndex = array.length
+    let randomIndex: number
   
     while (currentIndex > 0) {
-      randomIndex = Math.floor(Math.random() * currentIndex);
-      currentIndex--;
-  
-      [array[currentIndex], array[randomIndex]] = [
-        array[randomIndex], array[currentIndex]];
+      randomIndex = Math.floor(Math.random() * currentIndex)
+      currentIndex--
+      [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]]
     }
 }
