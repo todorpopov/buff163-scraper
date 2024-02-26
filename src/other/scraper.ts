@@ -4,6 +4,7 @@ import { Sticker } from 'src/types/response.sticker'
 import { CachedSticker } from 'src/types/sticker.cache'
 import { Item } from 'src/types/item'
 import { ObservableItem } from 'src/types/item.observable'
+import { ItemProperties } from 'src/types/item.properties'
 
 
 export function stickerPriceFilter(itemObject: Item, targetPercantage: number) {
@@ -114,19 +115,19 @@ function priceOutOfRange(min: number, max: number, price: number){
     return false
 }
 
-export function checkItemProperties(numberOfStickers, minPrice, maxPrice, itemPrice, refPricePercentage, itemReferencePrice){
+export function isItemEligible(itemPropertiesObject: ItemProperties){
     // Return false if the item has no stickers
-    if(numberOfStickers === 0){
+    if(itemPropertiesObject.stickers_num === 0){
         return false
     } 
             
     // Go to the next item if the current one's price is out of the options' range
-    if(priceOutOfRange(minPrice, maxPrice, itemPrice)){
+    if(priceOutOfRange(itemPropertiesObject.min_price, itemPropertiesObject.max_price, itemPropertiesObject.item_price)){
         return false
     } 
 
     // Go to the next item if the current one's price is more than XXX% over the reference price
-    if(!priceToRefPricePercentage(refPricePercentage, itemReferencePrice, itemPrice)){
+    if(!priceToRefPricePercentage(itemPropertiesObject.max_ref_price_percentage, itemPropertiesObject.ref_price, itemPropertiesObject.item_price)){
         return false
     }
 

@@ -2,13 +2,12 @@ import { Injectable, OnModuleInit } from '@nestjs/common'
 import { 
     editItemStickers, getItemOfferURL, 
     getItemURL, getFetchOptions, isSaved, 
-    parseItemName, checkItemProperties 
+    parseItemName, isItemEligible 
 } from '../other/scraper'
 import { sleep } from '../other/general'
 import { ReplaySubject } from 'rxjs'
 import { Cron } from '@nestjs/schedule'
 import fetch from 'node-fetch'
-import { HttpsProxyAgent } from 'https-proxy-agent'
 import { QueueService } from 'src/queue/queue.service'
 import { Item } from 'src/types/item'
 import { ObservableItem } from 'src/types/item.observable'
@@ -17,6 +16,7 @@ import { CachedSticker } from 'src/types/sticker.cache'
 import { Error } from 'src/types/error'
 import { ServerStatistics } from 'src/types/statistics'
 import { ResponseItem } from 'src/types/item.response'
+import { HttpsProxyAgent } from 'https-proxy-agent'
 const os = require('os')
 
 @Injectable()
@@ -117,7 +117,15 @@ export class ScraperService implements OnModuleInit {
             let itemStickers = item.asset_info.info.stickers
             const numberOfStickers = itemStickers.length
 
-            const itemChecks = checkItemProperties(numberOfStickers, this.options.item_min_price, this.options.item_max_price, itemPrice, this.options.max_reference_price_percentage, itemReferencePrice)
+            const itemPropertiesToCheck = {
+                stickers_num: numberOfStickers, 
+                min_price: this.options.item_min_price, 
+                max_price: this.options.item_max_price, 
+                item_price: itemPrice, 
+                ref_price: itemReferencePrice,
+                max_ref_price_percentage: this.options.max_reference_price_percentage, 
+            }
+            const itemChecks = isItemEligible(itemPropertiesToCheck)
             if(!itemChecks){return}
 
             // Remove unnecessary properties from each sticker object and add its price
@@ -215,10 +223,9 @@ export class ScraperService implements OnModuleInit {
         // Get average scraping time from the array
         const averageScrapingTime = (this.scrapingTimesArray.reduce((a, b) => a + b, 0) / this.scrapingTimesArray.length).toFixed(2)
         
+        const sumOfErrors = this.errors.property_undefined_errors + this.errors.request_errors + this.errors.too_many_reqests
         const errors = {
-            total_errors: this.errors.property_undefined_errors + 
-                        this.errors.request_errors + 
-                        this.errors.too_many_reqests,
+            total_errors: sumOfErrors,
             property_undefined_errors: this.errors.property_undefined_errors,
             request_errors: this.errors.request_errors,
             too_many_reqests: this.errors.too_many_reqests,
