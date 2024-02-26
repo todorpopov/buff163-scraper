@@ -1,4 +1,4 @@
-import { Sticker } from "./response.sticker"
+import { Sticker } from "./sticker.response"
 
 export type ResponseItem = {
     asset_info: {
@@ -8,6 +8,6 @@ export type ResponseItem = {
         },
         paintwear: string,
     },
-    price: '84.77',
-    user_id: 'U1077866593'
+    price: string,
+    user_id: string
 }

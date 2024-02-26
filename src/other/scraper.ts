@@ -1,6 +1,6 @@
 import { ReplaySubject } from 'rxjs'
 import { HttpsProxyAgent } from 'https-proxy-agent'
-import { Sticker } from 'src/types/response.sticker'
+import { Sticker } from 'src/types/sticker.response'
 import { CachedSticker } from 'src/types/sticker.cache'
 import { Item } from 'src/types/item'
 import { ObservableItem } from 'src/types/item.observable'

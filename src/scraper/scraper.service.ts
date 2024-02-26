@@ -111,10 +111,10 @@ export class ScraperService implements OnModuleInit {
             return
         }
 
-        itemsArray.map(item => {
-            const itemPrice = Number(item.price)
+        for(let i = 0; i < itemsArray.length; i++){
+            const itemPrice = Number(itemsArray[i].price)
 
-            let itemStickers = item.asset_info.info.stickers
+            let itemStickers = itemsArray[i].asset_info.info.stickers
             const numberOfStickers = itemStickers.length
 
             const itemPropertiesToCheck = {
@@ -132,17 +132,17 @@ export class ScraperService implements OnModuleInit {
             itemStickers = editItemStickers(this.stickersCache, itemStickers) 
 
             this.appendItem({ 
-                id: item.asset_info.assetid,
+                id: itemsArray[i].asset_info.assetid,
                 img_url: itemImgURL,
                 name: itemName,
                 price: itemPrice,
                 reference_price: itemReferencePrice,
                 number_of_stickers: numberOfStickers,
                 stickers: itemStickers,
-                item_offer_url: getItemOfferURL(item.user_id, itemName),
-                paintwear: item.asset_info.paintwear
+                item_offer_url: getItemOfferURL(itemsArray[i].user_id, itemName),
+                paintwear: itemsArray[i].asset_info.paintwear
             })
-        })
+        }
 
         const end = performance.now()
         this.scrapingTimesArray.push((end - start))
