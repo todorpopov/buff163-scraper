@@ -4,7 +4,7 @@ import {
     getItemURL, getFetchOptions, isSaved, 
     parseItemName, isItemEligible 
 } from '../other/scraper'
-import { sleep } from '../other/general'
+import { sleepMs } from '../other/general'
 import { ReplaySubject } from 'rxjs'
 import { Cron } from '@nestjs/schedule'
 import fetch from 'node-fetch'
@@ -163,7 +163,7 @@ export class ScraperService implements OnModuleInit {
     async scrapeArrayOfItemCodes(array: Array<string>, proxy: string){
         for(let i = 0; i < array.length; i++){
             await this.scrapePage(array[i], proxy)
-            await sleep(this.options.sleep_ms)
+            await sleepMs(this.options.sleep_ms)
         }
     }
 
