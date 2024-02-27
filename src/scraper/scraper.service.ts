@@ -111,38 +111,42 @@ export class ScraperService implements OnModuleInit {
             return
         }
 
-        for(let i = 0; i < itemsArray.length; i++){
-            const itemPrice = Number(itemsArray[i].price)
+        const eligibleItems = itemsArray.filter(item=>{
+            const itemPrice = Number(item.price)
 
-            let itemStickers = itemsArray[i].asset_info.info.stickers
+            let itemStickers = item.asset_info.info.stickers
             const numberOfStickers = itemStickers.length
 
             const itemPropertiesToCheck = {
                 stickers_num: numberOfStickers, 
-                min_price: this.options.item_min_price, 
-                max_price: this.options.item_max_price, 
+                min_price: this.options.item_min_price,
+                max_price: this.options.item_max_price,
                 item_price: itemPrice, 
                 ref_price: itemReferencePrice,
                 max_ref_price_percentage: this.options.max_reference_price_percentage, 
             }
-            const itemChecks = isItemEligible(itemPropertiesToCheck)
-            if(!itemChecks){return}
+            return isItemEligible(itemPropertiesToCheck)
+        })
 
-            // Remove unnecessary properties from each sticker object and add its price
-            itemStickers = editItemStickers(this.stickersCache, itemStickers) 
+        const withStickerPrices = eligibleItems.map(item=>{
+            const stickers  = editItemStickers(this.stickersCache, item.asset_info.info.stickers) 
 
-            this.appendItem({ 
-                id: itemsArray[i].asset_info.assetid,
+            return { 
+                id: item.asset_info.assetid,
                 img_url: itemImgURL,
                 name: itemName,
-                price: itemPrice,
+                price: Number(item.price),
                 reference_price: itemReferencePrice,
-                number_of_stickers: numberOfStickers,
-                stickers: itemStickers,
-                item_offer_url: getItemOfferURL(itemsArray[i].user_id, itemName),
-                paintwear: itemsArray[i].asset_info.paintwear
-            })
-        }
+                number_of_stickers: stickers.length,
+                stickers: stickers,
+                item_offer_url: getItemOfferURL(item.user_id, itemName),
+                paintwear: item.asset_info.paintwear
+            }
+        })
+
+        withStickerPrices.forEach(item => {
+            this.appendItem(item)
+        })
 
         const end = performance.now()
         this.scrapingTimesArray.push((end - start))
@@ -182,6 +186,8 @@ export class ScraperService implements OnModuleInit {
     }
 
     appendItem(item: Item) {
+        if(item === undefined){return}
+
         if(!isSaved(this.itemsSubject, item.id)){
             this.itemsSubject.next({ data: item })
             this.numberOfItems++
