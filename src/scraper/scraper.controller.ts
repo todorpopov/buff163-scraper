@@ -1,10 +1,11 @@
-import { Body, Controller, Get, OnModuleInit, Param, Post, Sse, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, OnModuleInit, Param, Post, Query, Sse, UseGuards } from '@nestjs/common';
 import { ScraperService } from './scraper.service';
 import { filter } from 'rxjs';
 import { AuthGuard } from '../auth/auth.guard';
-import { stickerPriceFilter } from '../other/scraper';
+import { maxItemPriceFilter, minItemPriceFilter, priceToRefPriceFilter, minStickerPriceFilter, maxStickerPriceFilter } from '../other/subject.filters';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Options } from 'src/types/options';
+import { Filters } from 'src/types/filters';
 
 @ApiTags('scraper')
 @Controller('scraper')
@@ -19,15 +20,27 @@ export class ScraperController implements OnModuleInit {
     }
 
     @ApiOperation({ summary: 'An observable SSE stream for storing the scraped items' })
-    // @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Sse("stream/filter=:filter")
     getDataSse(@Param('filter') stickerFilter: string){ 
         if(!stickerFilter.match("[1-9][0-9]*")){
             return this.scraperService.itemsSubject
         }else {
             return this.scraperService.itemsSubject
-            .pipe((filter(item => stickerPriceFilter(item['data'], Number(stickerFilter)))))
+            .pipe((filter(item => minStickerPriceFilter(item.data, Number(stickerFilter)))))
         }
+    }
+
+    @ApiOperation({ summary: 'Clone of the SSE endpoint but with the filters as query params' })
+    // @UseGuards(AuthGuard)
+    @Sse("stream")
+    dataStream(@Query() filters: Filters){
+        return this.scraperService.itemsSubject
+        .pipe(filter(item => filters.min_sticker_percentage ? minStickerPriceFilter(item.data, filters.min_sticker_percentage) : true))
+        .pipe(filter(item => filters.max_sticker_percentage ? maxStickerPriceFilter(item.data, filters.max_sticker_percentage) : true))
+        .pipe(filter(item => filters.min_price ? minItemPriceFilter(item.data, filters.min_price) : true))
+        .pipe(filter(item => filters.max_price ? maxItemPriceFilter(item.data, filters.max_price) : true))
+        .pipe(filter(item => filters.ref_price_percentage ? priceToRefPriceFilter(item.data, filters.ref_price_percentage) : true))
     }
 
     @ApiOperation({ summary: "Starts an infinite scraping process!" })
@@ -35,7 +48,7 @@ export class ScraperController implements OnModuleInit {
     @Post("start")
     async start(){
         this.stopScraping = false
-        console.log("\nScraping process has been started")
+        console.log("\nScraping process has been started!")
         while(true){
             if(this.stopScraping){ // Stop the scraping when "stopScraping" is set to "true"
                 break
@@ -77,9 +90,6 @@ export class ScraperController implements OnModuleInit {
     @Post("options/reset")
     resetOptions(){
         this.scraperService.updateOptions({
-            max_reference_price_percentage: -1,
-            item_min_price: 0,
-            item_max_price: 1000000,
             min_memory: 8,
             sleep_ms: 0
         })

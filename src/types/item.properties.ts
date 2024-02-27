@@ -1,8 +1,10 @@
+import { ResponseItem } from "./item.response";
+import { CachedSticker } from "./sticker.cache";
+
 export type ItemProperties = {
-    stickers_num: number, 
-    min_price: number, 
-    max_price: number, 
-    item_price: number, 
-    ref_price: number,
-    max_ref_price_percentage: number, 
+    with_stickers: Array<ResponseItem>,
+    stickers_cache: Array<CachedSticker>,
+    item_img_url: string,
+    item_name: string,
+    item_ref_price: number, 
 }

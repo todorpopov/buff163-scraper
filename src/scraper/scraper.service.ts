@@ -1,9 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common'
-import { 
-    editItemStickers, getItemOfferURL, 
-    getItemURL, getFetchOptions, isSaved, 
-    parseItemName, isItemEligible 
-} from '../other/scraper'
+import { getItemURL,getFetchOptions, isSaved, getItems } from '../other/scraper'
 import { sleepMs } from '../other/general'
 import { ReplaySubject } from 'rxjs'
 import { Cron } from '@nestjs/schedule'
@@ -36,9 +32,6 @@ export class ScraperService implements OnModuleInit {
     
     constructor(){
         this.options = {
-            max_reference_price_percentage: -1, // Default is "-1", meaning all items pass
-            item_min_price: 0,
-            item_max_price: 1_000_000,
             min_memory: 8, // Remaining memory percentage, at which all items get cleared
             sleep_ms: 0, // Timeout after each scraped page
         }
@@ -58,7 +51,7 @@ export class ScraperService implements OnModuleInit {
     async scrapePage(itemCode: string, proxy: string){
         const start = performance.now()
         this.numberOfPages++
-        
+
         const itemURL = getItemURL(itemCode)
         const proxyAgent = new HttpsProxyAgent(`http://${proxy}`)
         const fetchOptions = getFetchOptions(proxyAgent)
@@ -76,75 +69,38 @@ export class ScraperService implements OnModuleInit {
             return
         }
         
-        let itemReferencePrice: number
-        try{ // Get the reference price of the item
-            itemReferencePrice = Number(pageData.data.goods_infos[`${itemCode}`].steam_price_cny)
-        }catch(error){
+        const itemReferencePrice = pageData.data.goods_infos[`${itemCode}`]?.steam_price_cny
+        if(!itemReferencePrice){
             this.errors.property_undefined_errors++
-            itemReferencePrice = 0
-            console.error(`\n${itemCode}: ${error}`)
+            console.log(`\n${itemCode}: Reference price was not defined!`)
+            return
         }
-        
-        let itemName: string
-        try{ // Get the name of the item
-            itemName = parseItemName(pageData.data.goods_infos[`${itemCode}`].name)            
-        }catch(error){
+
+        const itemName = pageData.data.goods_infos[`${itemCode}`]?.name
+        if(!itemName){
             this.errors.property_undefined_errors++
+            console.log(`\n${itemCode}: Item name was not defined!`)
             return
         }
         
-        let itemImgURL: string
-        try{ // Get the item image URL
-            itemImgURL = pageData.data.goods_infos[`${itemCode}`].icon_url
-        }catch(error){
-            this.errors.property_undefined_errors++
-            console.error(`\n${itemCode}: ${error}`)
-            return
-        }
+        const itemImgURL = pageData.data.goods_infos[`${itemCode}`]?.icon_url
+        const itemsData = pageData.data.items
 
-        let itemsArray: Array<ResponseItem>
-        try{ // Get the item array
-            itemsArray = pageData.data.items
-        }catch(error){
-            this.errors.property_undefined_errors++
-            console.error(`\n${itemCode}: ${error}`)
-            return
-        }
-
-        const eligibleItems = itemsArray.filter(item=>{
-            const itemPrice = Number(item.price)
-
-            let itemStickers = item.asset_info.info.stickers
-            const numberOfStickers = itemStickers.length
-
-            const itemPropertiesToCheck = {
-                stickers_num: numberOfStickers, 
-                min_price: this.options.item_min_price,
-                max_price: this.options.item_max_price,
-                item_price: itemPrice, 
-                ref_price: itemReferencePrice,
-                max_ref_price_percentage: this.options.max_reference_price_percentage, 
-            }
-            return isItemEligible(itemPropertiesToCheck)
+        const itemsWithStickers = itemsData.filter(item => {
+            return item.asset_info.info.stickers.length !== 0
         })
 
-        const withStickerPrices = eligibleItems.map(item=>{
-            const stickers  = editItemStickers(this.stickersCache, item.asset_info.info.stickers) 
+        const commonProperties = {
+            with_stickers: itemsWithStickers,
+            stickers_cache: this.stickersCache,
+            item_img_url: itemImgURL,
+            item_name: itemName,
+            item_ref_price: itemReferencePrice, 
+        }
 
-            return { 
-                id: item.asset_info.assetid,
-                img_url: itemImgURL,
-                name: itemName,
-                price: Number(item.price),
-                reference_price: itemReferencePrice,
-                number_of_stickers: stickers.length,
-                stickers: stickers,
-                item_offer_url: getItemOfferURL(item.user_id, itemName),
-                paintwear: item.asset_info.paintwear
-            }
-        })
+        const getEditeditems = getItems(commonProperties)
 
-        withStickerPrices.forEach(item => {
+        getEditeditems.forEach(item => {
             this.appendItem(item)
         })
 
@@ -152,6 +108,24 @@ export class ScraperService implements OnModuleInit {
         this.scrapingTimesArray.push((end - start))
     }
     
+    async scrapeArrayOfItemCodes(itemCodes: Array<string>, proxy: string){
+        for(const itemCode of itemCodes){
+            await this.scrapePage(itemCode, proxy)
+            await sleepMs(this.options.sleep_ms)
+        }
+    }
+
+    async startQueue(){
+        const queue = new QueueService()
+        const proxies = queue.proxies
+        const arrayOfQueues = queue.queueChunks
+        
+        const promises = proxies.map((proxy, i) => this.scrapeArrayOfItemCodes(arrayOfQueues[i], proxy))
+        
+        console.log("\nQueue has been started!")
+        await Promise.all(promises)
+    }
+
     @Cron("0 0 * * *")
     async fetchStickersCache(){
         const stickersCacheURL = "https://stickers-server-adjsr.ondigitalocean.app/array"
@@ -164,30 +138,7 @@ export class ScraperService implements OnModuleInit {
         console.log("\nFetched latest stickers!")
     }
 
-    async scrapeArrayOfItemCodes(array: Array<string>, proxy: string){
-        for(let i = 0; i < array.length; i++){
-            await this.scrapePage(array[i], proxy)
-            await sleepMs(this.options.sleep_ms)
-        }
-    }
-
-    async startQueue(){
-        const queue = new QueueService()
-        const proxies = queue.proxies
-        const arraysToScrape = queue.arraysToScrape
-        
-        let promises = []
-        for(let i = 0; i < proxies.length; i++){ // Populates an array with scrapeArrayOfItems promises 
-            promises.push(this.scrapeArrayOfItemCodes(arraysToScrape[i], proxies[i]))
-        }
-        
-        console.log("\nQueue has been started!")
-        await Promise.all(promises) // Executes the promises simultaneously
-    }
-
     appendItem(item: Item) {
-        if(item === undefined){return}
-
         if(!isSaved(this.itemsSubject, item.id)){
             this.itemsSubject.next({ data: item })
             this.numberOfItems++

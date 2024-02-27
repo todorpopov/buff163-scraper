@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { parseItemCodesFile, shuffleItemCodesArray } from 'src/other/queue';
+const _ = require('lodash')
 
 @Injectable()
 export class QueueService {
     itemFileContent = []
     proxies = []
-    arraysToScrape = []
+    queueChunks = []
 
     constructor() {
         this.itemFileContent = parseItemCodesFile()
@@ -16,14 +17,7 @@ export class QueueService {
     }
 
     divideQueue(){
-        const originalArraySize = this.itemFileContent.length
-        const chunkSize = originalArraySize / this.proxies.length
-        const arrayOfArrays = []
-
-        for (let i = 0; i < originalArraySize; i += chunkSize) {
-            arrayOfArrays.push(this.itemFileContent.slice(i, i + chunkSize));
-        }
-
-        this.arraysToScrape = arrayOfArrays
+        const chunkSize = Math.round(this.itemFileContent.length / this.proxies.length)
+        this.queueChunks = _.chunk(this.itemFileContent, chunkSize)
     }
 }

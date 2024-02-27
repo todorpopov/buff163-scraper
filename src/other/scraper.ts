@@ -5,26 +5,7 @@ import { CachedSticker } from 'src/types/sticker.cache'
 import { Item } from 'src/types/item'
 import { ObservableItem } from 'src/types/item.observable'
 import { ItemProperties } from 'src/types/item.properties'
-
-
-export function stickerPriceFilter(itemObject: Item, targetPercantage: number) {
-    const itemPrice = itemObject.price
-    let stickersTotal = 0
-
-    itemObject.stickers.forEach(sticker => {
-        stickersTotal += sticker.price
-    })
-
-    if(stickersTotal === 0){
-        return false
-    }
-    
-    const targetPrice = itemPrice * (targetPercantage / 100)
-    if (stickersTotal >= targetPrice){
-        return true
-    }
-    return false
-}
+import { ResponseItem } from 'src/types/item.response'
 
 function checkStickerCache(stickersCache: Array<CachedSticker>, name: string){
     name = `Sticker | ${name}`
@@ -35,16 +16,6 @@ function checkStickerCache(stickersCache: Array<CachedSticker>, name: string){
         }
     })
     return itemPrice
-}
-
-function priceToRefPricePercentage(maxPercentageDifference: number, referencePrice: number, itemPrice: number){
-    if(referencePrice === 0 || itemPrice < referencePrice || maxPercentageDifference === -1){return true}
-
-    const percentageDifference = (itemPrice / referencePrice) * 100
-
-    if(percentageDifference > maxPercentageDifference){return false}
-
-    return true
 }
 
 export function isSaved(subject: ReplaySubject<ObservableItem>, id: string){
@@ -84,18 +55,18 @@ export function getFetchOptions(proxyAgent: HttpsProxyAgent<string>){
     }
 }
 
-export function getItemOfferURL(userId: string, itemName: string){
+function getItemOfferURL(userId: string, itemName: string){
     return `https://buff.163.com/shop/${userId}#tab=selling&game=csgo&page_num=1&search=${itemName.replaceAll(' ', '%20')}`
 }
 
-export function parseItemName(itemName: string){
+function parseItemName(itemName: string){
     if(itemName.includes('StatTrak')){
         return itemName.slice(10)
     }
     return itemName
 }
 
-export function editItemStickers(stickerCache: Array<CachedSticker>, stickersArray: Array<Sticker>){
+function editItemStickers(stickerCache: Array<CachedSticker>, stickersArray: Array<Sticker>){
     let stickersArrayCopy = [...stickersArray]
     stickersArrayCopy.map(sticker => {
         delete sticker.category
@@ -109,27 +80,20 @@ export function editItemStickers(stickerCache: Array<CachedSticker>, stickersArr
     return stickersArrayCopy
 }
 
-function priceOutOfRange(min: number, max: number, price: number){
-    if(price < min || price > max){return true}
+export function getItems(properties: ItemProperties){
+    return properties.with_stickers.map(item => {
+        const stickers  = editItemStickers(properties.stickers_cache, item.asset_info.info.stickers) 
     
-    return false
-}
-
-export function isItemEligible(itemPropertiesObject: ItemProperties){
-    // Return false if the item has no stickers
-    if(itemPropertiesObject.stickers_num === 0){
-        return false
-    } 
-            
-    // Go to the next item if the current one's price is out of the options' range
-    if(priceOutOfRange(itemPropertiesObject.min_price, itemPropertiesObject.max_price, itemPropertiesObject.item_price)){
-        return false
-    } 
-
-    // Go to the next item if the current one's price is more than XXX% over the reference price
-    if(!priceToRefPricePercentage(itemPropertiesObject.max_ref_price_percentage, itemPropertiesObject.ref_price, itemPropertiesObject.item_price)){
-        return false
-    }
-
-    return true
+        return { 
+            id: item.asset_info.assetid,
+            img_url: properties.item_img_url,
+            name: parseItemName(properties.item_name),
+            price: Number(item.price),
+            reference_price: properties.item_ref_price,
+            number_of_stickers: stickers.length,
+            stickers: stickers,
+            item_offer_url: getItemOfferURL(item.user_id, properties.item_name),
+            paintwear: item.asset_info.paintwear
+        }
+    })
 }
