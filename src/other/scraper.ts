@@ -59,7 +59,7 @@ function getItemOfferURL(userId: string, itemName: string){
     return `https://buff.163.com/shop/${userId}#tab=selling&game=csgo&page_num=1&search=${itemName.replaceAll(' ', '%20')}`
 }
 
-function parseItemName(itemName: string){
+export function parseItemName(itemName: string){
     if(itemName.includes('StatTrak')){
         return itemName.slice(10)
     }
@@ -87,7 +87,7 @@ export function getItems(properties: ItemProperties){
         return { 
             id: item.asset_info.assetid,
             img_url: properties.item_img_url,
-            name: parseItemName(properties.item_name),
+            name: properties.item_name,
             price: Number(item.price),
             reference_price: properties.item_ref_price,
             number_of_stickers: stickers.length,

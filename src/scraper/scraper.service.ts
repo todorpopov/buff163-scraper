@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common'
-import { getItemURL,getFetchOptions, isSaved, getItems } from '../other/scraper'
+import { getItemURL,getFetchOptions, isSaved, getItems, parseItemName } from '../other/scraper'
 import { sleepMs } from '../other/general'
 import { ReplaySubject } from 'rxjs'
 import { Cron } from '@nestjs/schedule'
@@ -94,7 +94,7 @@ export class ScraperService implements OnModuleInit {
             with_stickers: itemsWithStickers,
             stickers_cache: this.stickersCache,
             item_img_url: itemImgURL,
-            item_name: itemName,
+            item_name: parseItemName(itemName),
             item_ref_price: itemReferencePrice, 
         }
 
