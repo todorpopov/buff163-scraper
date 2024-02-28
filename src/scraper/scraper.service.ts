@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { getItemURL,getFetchOptions, isSaved, getItems, parseItemName } from '../other/scraper'
 import { sleepMs } from '../other/general'
 import { ReplaySubject } from 'rxjs'
@@ -62,7 +62,7 @@ export class ScraperService {
             pageData = JSON.parse(pageData)
         }catch(error){
             this.errors.too_many_reqests++
-            console.error(`\n${itemCode}: ${error}`)
+            console.error(`\n${itemCode}: ${error}\n${pageData}`)
             return
         }
         

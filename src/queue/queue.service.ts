@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { parseItemCodesFile, shuffleItemCodesArray } from 'src/other/queue';
+import { parseItemCodesFile } from 'src/other/queue';
 const _ = require('lodash')
 
 @Injectable()
@@ -12,7 +12,6 @@ export class QueueService {
         this.itemFileContent = parseItemCodesFile()
         this.proxies = process.env.PROXIES.split(" ")
 
-        shuffleItemCodesArray(this.itemFileContent)
         this.divideQueue()
     }
 

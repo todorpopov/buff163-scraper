@@ -11,7 +11,7 @@ import { Filters } from 'src/types/filters';
 @Controller('scraper')
 export class ScraperController implements OnModuleInit {
     async onModuleInit() {
-        this.start()
+        this.startQueue()
     }
 
     stopScraping: boolean // A variable to manage the scraping process through endpoints
@@ -32,7 +32,7 @@ export class ScraperController implements OnModuleInit {
     }
 
     @ApiOperation({ summary: 'Clone of the SSE endpoint but with the filters as query params' })
-    // @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Sse("stream")
     dataStream(@Query() filters: Filters){
         return this.scraperService.itemsSubject
@@ -47,6 +47,11 @@ export class ScraperController implements OnModuleInit {
     @UseGuards(AuthGuard)
     @Post("start")
     async start(){
+        this.startQueue()
+        return({ msg: "Scraping has been started sucessfully!" })
+    }
+
+    async startQueue(){
         this.stopScraping = false
         console.log("\nScraping process has been started!")
         while(true){
@@ -106,7 +111,7 @@ export class ScraperController implements OnModuleInit {
     }
     
     @ApiOperation({ summary: "Get server stats" })
-    // @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Get("stats")
     stats(){
         return this.scraperService.serverStats

@@ -14,6 +14,10 @@ import { ConfigService } from '@nestjs/config';
     constructor(private jwtService: JwtService, private configService: ConfigService) {}
   
     async canActivate(context: ExecutionContext): Promise<boolean> {
+      const deactivateAuth = process.env.DEACTIVATE_AUTH
+      console.log(`\nDeactivate Auth env variable: ${deactivateAuth}`)
+      if(deactivateAuth === "true"){return true}
+
       const request = context.switchToHttp().getRequest();
       const token = await this.extractTokenFromCookies(request);
       
