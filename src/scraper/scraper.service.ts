@@ -11,16 +11,13 @@ import { Options } from 'src/types/options'
 import { CachedSticker } from 'src/types/sticker.cache'
 import { Error } from 'src/types/error'
 import { ServerStatistics } from 'src/types/statistics'
-import { ResponseItem } from 'src/types/item.response'
+// import { ResponseItem } from 'src/types/item.response'
 import { HttpsProxyAgent } from 'https-proxy-agent'
+// const _ = require('lodash')
 const os = require('os')
 
 @Injectable()
-export class ScraperService implements OnModuleInit {
-    async onModuleInit() {
-        await this.fetchStickersCache()
-    }
-
+export class ScraperService {
     options: Options
     stickersCache: Array<CachedSticker>
     itemsSubject: ReplaySubject<ObservableItem>
@@ -116,17 +113,19 @@ export class ScraperService implements OnModuleInit {
     }
 
     async startQueue(){
+        if(this.stickersCache.length === 0){
+            await this.fetchStickersCache()
+        }
+
         const queue = new QueueService()
         const proxies = queue.proxies
-        const arrayOfQueues = queue.queueChunks
-        
-        const promises = proxies.map((proxy, i) => this.scrapeArrayOfItemCodes(arrayOfQueues[i], proxy))
+        const multipleQueues = queue.multipleQueues
         
         console.log("\nQueue has been started!")
-        await Promise.all(promises)
+        await Promise.all(proxies.map((proxy, i) => this.scrapeArrayOfItemCodes(multipleQueues[i], proxy)))
     }
 
-    @Cron("0 0 * * *")
+    //@Cron("0 0 * * *")
     async fetchStickersCache(){
         const stickersCacheURL = "https://stickers-server-adjsr.ondigitalocean.app/array"
         this.stickersCache = await fetch(stickersCacheURL, {method: 'GET'})

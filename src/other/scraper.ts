@@ -2,10 +2,11 @@ import { ReplaySubject } from 'rxjs'
 import { HttpsProxyAgent } from 'https-proxy-agent'
 import { Sticker } from 'src/types/sticker.response'
 import { CachedSticker } from 'src/types/sticker.cache'
-import { Item } from 'src/types/item'
+// import { Item } from 'src/types/item'
 import { ObservableItem } from 'src/types/item.observable'
 import { ItemProperties } from 'src/types/item.properties'
-import { ResponseItem } from 'src/types/item.response'
+// import { ResponseItem } from 'src/types/item.response'
+// const _ = require('lodash')
 
 function checkStickerCache(stickersCache: Array<CachedSticker>, name: string){
     name = `Sticker | ${name}`
@@ -20,11 +21,19 @@ function checkStickerCache(stickersCache: Array<CachedSticker>, name: string){
 
 export function isSaved(subject: ReplaySubject<ObservableItem>, id: string){
     let statement = false
+
     subject.forEach(value => {
         if(value.data.id === id){
             statement = true
         }
     })
+
+    // _.forEach(subject, function(item) {
+    //     if(item.data.id === id){
+    //         statement = true
+    //     }
+    // })
+    
     return statement
 }
 

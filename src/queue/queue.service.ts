@@ -6,7 +6,7 @@ const _ = require('lodash')
 export class QueueService {
     itemFileContent = []
     proxies = []
-    queueChunks = []
+    multipleQueues = []
 
     constructor() {
         this.itemFileContent = parseItemCodesFile()
@@ -17,7 +17,11 @@ export class QueueService {
     }
 
     divideQueue(){
-        const chunkSize = Math.round(this.itemFileContent.length / this.proxies.length)
-        this.queueChunks = _.chunk(this.itemFileContent, chunkSize)
+        const fileContentLength = this.itemFileContent.length
+        const numberOfProxies = this.proxies.length
+        const chunkSize = Math.floor(fileContentLength / numberOfProxies)
+
+        console.log(`\nNumber of queues: ${numberOfProxies}\nQueue size: ${chunkSize}`)
+        this.multipleQueues = _.chunk(this.itemFileContent, chunkSize)
     }
 }
