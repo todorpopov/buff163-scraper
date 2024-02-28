@@ -11,6 +11,8 @@ export class QueueService {
     constructor() {
         this.itemFileContent = parseItemCodesFile()
         this.proxies = process.env.PROXIES.split(" ")
+        console.log(`\nRead from proxy variable: ${process.env.PROXIES}`)
+        console.log(`\nParsed proxies array: ${this.proxies}`)
 
         this.divideQueue()
     }
