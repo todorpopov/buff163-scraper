@@ -24,6 +24,6 @@ deploy-service:
     - docker tag scraper-image registry.digitalocean.com/buff163-scraper-registry/scraper-image
     - docker push registry.digitalocean.com/buff163-scraper-registry/scraper-image
     - ssh root@$DROPLET_IP "docker login -u '$DOCKER_PASSWORD' -p '$DOCKER_PASSWORD' registry.digitalocean.com && 
-                            docker ps -aq | xargs docker rm -f &&
-                            docker pull registry.digitalocean.com/buff163-scraper-registry/scraper-image && 
-                            docker run -d --name scraper-container --env-file /etc/environment --restart always -p 3000:3000 registry.digitalocean.com/buff163-scraper-registry/scraper-image"
+      docker ps -aq | xargs docker rm -f &&
+      docker pull registry.digitalocean.com/buff163-scraper-registry/scraper-image && 
+      docker run -d --name scraper-container --env-file /etc/environment --restart always -p 3000:3000 registry.digitalocean.com/buff163-scraper-registry/scraper-image"

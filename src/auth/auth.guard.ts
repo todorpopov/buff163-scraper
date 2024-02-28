@@ -15,7 +15,7 @@ import { ConfigService } from '@nestjs/config';
   
     async canActivate(context: ExecutionContext): Promise<boolean> {
       const deactivateAuth = process.env.DEACTIVATE_AUTH
-      console.log(`\nDeactivate Auth env variable: ${deactivateAuth}`)
+      // console.log(`\nDeactivate Auth env variable: ${deactivateAuth}`)
       if(deactivateAuth === "true"){return true}
 
       const request = context.switchToHttp().getRequest();
