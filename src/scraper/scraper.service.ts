@@ -11,9 +11,7 @@ import { Options } from 'src/types/options'
 import { CachedSticker } from 'src/types/sticker.cache'
 import { Error } from 'src/types/error'
 import { ServerStatistics } from 'src/types/statistics'
-// import { ResponseItem } from 'src/types/item.response'
 import { HttpsProxyAgent } from 'https-proxy-agent'
-// const _ = require('lodash')
 const os = require('os')
 
 @Injectable()
@@ -53,16 +51,20 @@ export class ScraperService {
         const proxyAgent = new HttpsProxyAgent(`http://${proxy}`)
         const fetchOptions = getFetchOptions(proxyAgent)
 
-        let pageData = await fetch(itemURL, fetchOptions).then(res => res.text()).catch(error => {
+        let pageData = await fetch(itemURL, fetchOptions).then(res => {
+            if(res.status !== 200){
+                this.errors.too_many_reqests++
+                console.log(`\nFetch failed! Status code: ${res.status}`)
+            }
+            return res.text()
+        }).catch(error => {
             this.errors.request_errors++
             console.error(`\n${itemCode}: ${error}`)
         })
-        
+
         try{ // HTML handling (429 responses or proxies not working)
             pageData = JSON.parse(pageData)
         }catch(error){
-            this.errors.too_many_reqests++
-            console.error(`\n${itemCode}: ${error}\n${pageData}`)
             return
         }
         
@@ -127,7 +129,7 @@ export class ScraperService {
 
     //@Cron("0 0 * * *")
     async fetchStickersCache(){
-        const stickersCacheURL = "https://stickers-server-adjsr.ondigitalocean.app/array"
+        const stickersCacheURL = `https://${process.env.STICKERS_CACHE_URL}/array`
         this.stickersCache = await fetch(stickersCacheURL, {method: 'GET'})
         .then(res => res.json())
         .catch(error => {
