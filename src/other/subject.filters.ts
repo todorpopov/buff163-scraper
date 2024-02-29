@@ -1,14 +1,8 @@
 import { Item } from "src/types/item"
 
 export function minStickerPriceFilter(itemObject: Item, targetPercantage: number) {
-    if(targetPercantage === -1){return true}
-
     const itemPrice = itemObject.price
-    let stickersTotal = 0
-
-    itemObject.stickers.forEach(sticker => {
-        stickersTotal += sticker.price
-    })
+    let stickersTotal = getStickersTotal(itemObject)
 
     if(stickersTotal === 0){return false}
     
@@ -19,14 +13,8 @@ export function minStickerPriceFilter(itemObject: Item, targetPercantage: number
 }
 
 export function maxStickerPriceFilter(itemObject: Item, targetPercantage: number) {
-    if(targetPercantage === -1){return true}
-
     const itemPrice = itemObject.price
-    let stickersTotal = 0
-
-    itemObject.stickers.forEach(sticker => {
-        stickersTotal += sticker.price
-    })
+    let stickersTotal = getStickersTotal(itemObject)
 
     if(stickersTotal === 0){return false}
     
@@ -36,9 +24,11 @@ export function maxStickerPriceFilter(itemObject: Item, targetPercantage: number
     return false
 }
 
-export function minItemPriceFilter(itemObject: Item, minPrice: number){
-    if(minPrice === 0){return true}
+function getStickersTotal(itemObject: Item){
+    return itemObject.stickers.reduce((acc, sticker) => acc + sticker.price, 0)
+}
 
+export function minItemPriceFilter(itemObject: Item, minPrice: number){
     const itemPrice = itemObject.price
 
     if(itemPrice < minPrice){return false}
@@ -47,8 +37,6 @@ export function minItemPriceFilter(itemObject: Item, minPrice: number){
 }
 
 export function maxItemPriceFilter(itemObject: Item, maxPrice: number){
-    if(maxPrice === -1){return true}
-
     const itemPrice = itemObject.price
 
     if(itemPrice > maxPrice){return false}
@@ -60,7 +48,7 @@ export function priceToRefPriceFilter(itemObject: Item, maxPercentageDifference:
     const itemPrice = itemObject.price
     const referencePrice = itemObject.reference_price
 
-    if(referencePrice === 0 || itemPrice < referencePrice || maxPercentageDifference === -1){return true}
+    if(referencePrice === 0 || itemPrice < referencePrice){return true}
 
     const percentageDifference = (itemPrice / referencePrice) * 100
 
