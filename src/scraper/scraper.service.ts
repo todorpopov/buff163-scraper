@@ -54,7 +54,7 @@ export class ScraperService {
         let pageData = await fetch(itemURL, fetchOptions).then(res => {
             if(res.status !== 200){
                 this.errors.too_many_reqests++
-                console.log(`\nFetch failed! Status code: ${res.status}`)
+                console.log(`\nHTML found in the response!\nStatus code: ${res.status}`)
             }
             return res.text()
         }).catch(error => {
@@ -62,31 +62,33 @@ export class ScraperService {
             console.error(`\n${itemCode}: ${error}`)
         })
 
-        try{ // HTML handling (429 responses or proxies not working)
+        try{
             pageData = JSON.parse(pageData)
         }catch(error){
+            // this.errors.too_many_reqests++
+            // console.log(`\n${itemCode}: Couldn't parse the response to JSON!`)
             return
         }
         
-        const itemReferencePrice = pageData.data.goods_infos[`${itemCode}`]?.steam_price_cny
+        const itemReferencePrice = pageData?.data?.goods_infos[`${itemCode}`]?.steam_price_cny
         if(!itemReferencePrice){
             this.errors.property_undefined_errors++
             console.log(`\n${itemCode}: Reference price was not defined!`)
             return
         }
 
-        const itemName = pageData.data.goods_infos[`${itemCode}`]?.name
+        const itemName = pageData?.data?.goods_infos[`${itemCode}`]?.name
         if(!itemName){
             this.errors.property_undefined_errors++
             console.log(`\n${itemCode}: Item name was not defined!`)
             return
         }
         
-        const itemImgURL = pageData.data.goods_infos[`${itemCode}`]?.icon_url
-        const itemsData = pageData.data.items
+        const itemImgURL = pageData?.data?.goods_infos[`${itemCode}`]?.icon_url
+        const itemsData = pageData?.data?.items
 
         const itemsWithStickers = itemsData.filter(item => {
-            return item.asset_info.info.stickers.length !== 0
+            return item?.asset_info?.info.stickers?.length !== 0
         })
 
         const commonProperties = {
