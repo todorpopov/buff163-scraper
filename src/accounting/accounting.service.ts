@@ -1,29 +1,34 @@
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { getDate } from 'src/other/general';
+import { AccountingStats } from 'src/types/accounting';
 import { Item } from 'src/types/item';
+import { AccountingItem } from 'src/types/item.accounting';
 
 @Injectable()
 export class AccountingService {
-    mockDatabase: Array<any>
-    constructor(){
-        this.mockDatabase = []
+    constructor(@InjectModel('AccountingItem') private readonly accountingItem: Model<AccountingItem>){}
+    stats: AccountingStats
+
+    getAllItems(){
+        
     }
 
-    getAllData(){
-        return this.mockDatabase
+    getStats(){
+        return this.stats
     }
 
-    buyItem(item: Item){
-        const date = getDate()
-        const price = item.price
-        const itemStickers = item.stickers
+    async buyItem(item: Item){
+        const accountingItem = new this.accountingItem({
+            date: getDate(),
+            item: item
+        })
 
-        this.mockDatabase.push({ date: date, item: item})
-
-        console.log(`Item bought!\n date: ${date}\nPrice: ${price}\nStickers: ${itemStickers}`)
+        await accountingItem.save()
     }
 
     sellItem(itemId: string, sellPrice: number){
-        
+
     }
 }

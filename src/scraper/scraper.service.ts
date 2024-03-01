@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { getItemURL,getFetchOptions, isSaved, getItems, parseItemName } from '../other/scraper'
-import { sleepMs } from '../other/general'
+import { getDate, sleepMs } from '../other/general'
 import { ReplaySubject } from 'rxjs'
 import { Cron } from '@nestjs/schedule'
 import fetch from 'node-fetch'
@@ -12,6 +12,8 @@ import { CachedSticker } from 'src/types/sticker.cache'
 import { Error } from 'src/types/error'
 import { ServerStatistics } from 'src/types/statistics'
 import { HttpsProxyAgent } from 'https-proxy-agent'
+import { InjectModel } from '@nestjs/mongoose'
+import { Model } from 'mongoose'
 const os = require('os')
 
 @Injectable()
@@ -131,7 +133,7 @@ export class ScraperService {
 
     //@Cron("0 0 * * *")
     async fetchStickersCache(){
-        const stickersCacheURL = `https://${process.env.STICKERS_CACHE_URL}/array`
+        const stickersCacheURL = process.env.STICKERS_CACHE_URL
         this.stickersCache = await fetch(stickersCacheURL, {method: 'GET'})
         .then(res => res.json())
         .catch(error => {
@@ -141,7 +143,7 @@ export class ScraperService {
         console.log("\nFetched latest stickers!")
     }
 
-    appendItem(item: Item) {
+    async appendItem(item: Item) {
         if(!isSaved(this.itemsSubject, item.id)){
             this.itemsSubject.next({ data: item })
             this.numberOfItems++
@@ -197,7 +199,7 @@ export class ScraperService {
         }
 
         const serverStats = {
-            date: new Date().toString(),
+            date: getDate(),
             number_of_items: this.numberOfItems,
             pages_scraped: this.numberOfPages,
             average_scrape_time_ms: averageScrapingTime,

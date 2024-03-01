@@ -7,6 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { QueueModule } from './queue/queue.module';
 import { AccountingModule } from './accounting/accounting.module';
+import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AccountingModule } from './accounting/accounting.module';
     ScheduleModule.forRoot(),
     QueueModule,
     AccountingModule,
+    MongooseModule.forRoot(process.env.DB_URL),
   ],
   controllers: [AppController],
   providers: [],
