@@ -4,31 +4,79 @@ import { Model } from 'mongoose';
 import { getDate } from 'src/other/general';
 import { AccountingStats } from 'src/types/accounting';
 import { Item } from 'src/types/item';
-import { AccountingItem } from 'src/types/item.accounting';
+import { BoughtItem } from 'src/types/item.bought';
+import { SoldItem } from 'src/types/item.sold';
 
 @Injectable()
 export class AccountingService {
-    constructor(@InjectModel('AccountingItem') private readonly accountingItem: Model<AccountingItem>){}
-    stats: AccountingStats
+    constructor(
+        @InjectModel('BoughtItem') private readonly boughtItem: Model<BoughtItem>,
+        @InjectModel('SoldItem') private readonly soldItem: Model<SoldItem>,
+        @InjectModel('Item') private readonly itemModel: Model<Item>
+    ){}
 
-    getAllItems(){
-        
-    }
+    async buyItem(itemId: string){
+        const existingItem = await this.itemModel.findOne({'id': itemId})
 
-    getStats(){
-        return this.stats
-    }
+        if(!existingItem){
+            console.log(`\n[Buy Item: ${itemId}] - Item doesn't exist!`)
+            return
+        }
 
-    async buyItem(item: Item){
-        const accountingItem = new this.accountingItem({
+        const stickersTotal = existingItem.stickers.reduce((acc, sticker) => acc + sticker.price, 0)
+
+        const boughtItem = new this.boughtItem({
             date: getDate(),
-            item: item
+            id: existingItem.id,
+            name: existingItem.name,
+            price: existingItem.price,
+            stickers_total: stickersTotal
         })
 
-        await accountingItem.save()
+        await boughtItem.save()
+        await existingItem.deleteOne()
     }
 
-    sellItem(itemId: string, sellPrice: number){
+    async sellItem(itemId: string, sellPrice: number){
+        const boughtItem = await this.boughtItem.findOne({'id': itemId})
 
+        if(!boughtItem){
+            console.log(`\n[Sell Item: ${itemId}] - Item doesn't exist!`)
+            return
+        }
+        
+        const soldItem = new this.soldItem({
+            id: boughtItem.id,
+            date_bought: boughtItem.date,
+            date_sold: getDate(),
+            price_bought: boughtItem.price,
+            price_sold: sellPrice,
+            profit: sellPrice - boughtItem.price
+        })
+        
+        await soldItem.save()
+        await boughtItem.deleteOne()
+    }
+
+    async getAllBoughtItems(){
+        return await this.boughtItem.find({})
+    }
+    
+    async getAllSoldItems(){
+        return await this.soldItem.find({})
+    }
+    
+    async getStats(){
+        const soldItems = await this.getAllSoldItems()
+
+        const totalInvested = soldItems.reduce((acc, item) => acc + item.price_bought, 0)
+        const totalProfit = soldItems.reduce((acc, item) => acc + item.price_sold, 0)
+
+        const stats = {
+            total_invested: totalInvested,
+            total_profit: totalProfit,
+        }
+
+        return stats
     }
 }

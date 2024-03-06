@@ -21,13 +21,13 @@ export class ScraperService {
     options: Options
     stickersCache: Array<CachedSticker>
     itemsSubject: ReplaySubject<ObservableItem>
-    numberOfItems: number
+    numberOfItemsSaved: number
     scrapingTimesArray: Array<number>
     errors: Error
     numberOfPages: number
     serverStats: ServerStatistics
     
-    constructor(){
+    constructor(@InjectModel("Item") private readonly itemModel: Model<Item>){
         this.options = {
             min_memory: 8, // Remaining memory percentage, at which all items get cleared
             sleep_ms: 0, // Timeout after each scraped page
@@ -40,7 +40,7 @@ export class ScraperService {
         }
         this.stickersCache = []
         this.itemsSubject = new ReplaySubject<ObservableItem>()
-        this.numberOfItems = 0
+        this.numberOfItemsSaved = 0
         this.scrapingTimesArray = []
         this.numberOfPages = 0
     }
@@ -56,7 +56,7 @@ export class ScraperService {
         let pageData = await fetch(itemURL, fetchOptions).then(res => {
             if(res.status !== 200){
                 this.errors.too_many_reqests++
-                console.log(`\nHTML found in the response!\nStatus code: ${res.status}`)
+                console.log(`\nStatus code: ${res.status}!`)
             }
             return res.text()
         }).catch(error => {
@@ -67,8 +67,7 @@ export class ScraperService {
         try{
             pageData = JSON.parse(pageData)
         }catch(error){
-            // this.errors.too_many_reqests++
-            // console.log(`\n${itemCode}: Couldn't parse the response to JSON!`)
+            this.errors.total_errors++
             return
         }
         
@@ -101,9 +100,10 @@ export class ScraperService {
             item_ref_price: itemReferencePrice, 
         }
 
-        const getEditeditems = getItems(commonProperties)
+        const editedItems = getItems(commonProperties)
 
-        getEditeditems.forEach(item => {
+        editedItems.forEach(async (item) => {
+            await this.saveToDB(item)
             this.appendItem(item)
         })
 
@@ -146,7 +146,15 @@ export class ScraperService {
     async appendItem(item: Item) {
         if(!isSaved(this.itemsSubject, item.id)){
             this.itemsSubject.next({ data: item })
-            this.numberOfItems++
+        }
+    }
+
+    async saveToDB(item: Item){
+        const itemModel = new this.itemModel(item)
+        try{
+            await itemModel.save()
+        }catch{
+            return
         }
     }
 
@@ -157,7 +165,7 @@ export class ScraperService {
     clearItems() { // Clear all items from the Subject, all logs, and all errors
         this.itemsSubject.complete()
         this.itemsSubject = new ReplaySubject<ObservableItem>()
-        this.numberOfItems = 0
+        this.numberOfItemsSaved = 0
         this.serverStats
         this.scrapingTimesArray = []
         this.errors = {
@@ -170,17 +178,25 @@ export class ScraperService {
 
         console.log(`\nItems and Logs have been cleared!`)
     }
+    
+    @Cron("0 * * * *")
+    async clearDbCollection(){
+        await this.itemModel.deleteMany({})
+        console.log("\nItems have been removed from the database!")
+    }
 
     @Cron("*/1 * * * * *")
-    getserverStats(){
+    async getserverStats(){
         // Get the free memory of the system
         const freeMemory = Math.round(os.freemem() / 1024 / 1024) 
         
-        // Get the total memory of the system 
+        // Get the total memory of the system
         const totalMemory = Math.round(os.totalmem() / 1024 / 1024)
 
         // Calculate the free memory percentage of the system
         const memoryPercetage = (freeMemory / totalMemory) * 100 
+
+        const numberOfdocuments = await this.itemModel.countDocuments()
 
         // Get average scraping time from the array
         const averageScrapingTime = (this.scrapingTimesArray.reduce((a, b) => a + b, 0) / this.scrapingTimesArray.length).toFixed(2)
@@ -200,7 +216,7 @@ export class ScraperService {
 
         const serverStats = {
             date: getDate(),
-            number_of_items: this.numberOfItems,
+            number_of_items_saved: numberOfdocuments,
             pages_scraped: this.numberOfPages,
             average_scrape_time_ms: averageScrapingTime,
             errors: errors,

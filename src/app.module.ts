@@ -8,6 +8,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { QueueModule } from './queue/queue.module';
 import { AccountingModule } from './accounting/accounting.module';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ItemSchema } from './scraper/schemas/item.schema';
 
 @Module({
   imports: [

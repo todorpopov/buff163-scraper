@@ -102,11 +102,11 @@ export class ScraperController implements OnModuleInit {
         return { msg: "Options reset successfully!"}
     }
 
-    @ApiOperation({ summary: 'Clears all saved data' })
+    @ApiOperation({ summary: 'Removes all items saved to the database' })
     @UseGuards(AuthGuard)
     @Get("clear")
-    clearObservable(){
-        this.scraperService.clearItems()
+    async clearItems(){
+        await this.scraperService.clearDbCollection()
         return { msg: "Items cleared successfully!" }
     }
     
