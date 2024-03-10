@@ -28,6 +28,8 @@
     "@nestjs/mongoose": "^10.0.4",
     "@nestjs/schedule": "^4.0.1",
     "@nestjs/swagger": "^7.1.17",
+    "@sentry/node": "^7.105.0",
+    "@sentry/profiling-node": "^7.105.0",
     "cookie-parser": "^1.4.6",
     "https-proxy-agent": "^7.0.3",
     "lodash": "^4.17.21",

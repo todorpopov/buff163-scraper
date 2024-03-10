@@ -67,16 +67,8 @@ export class AccountingService {
     }
     
     async getStats(){
-        const soldItems = await this.getAllSoldItems()
-
-        const totalInvested = soldItems.reduce((acc, item) => acc + item.price_bought, 0)
-        const totalProfit = soldItems.reduce((acc, item) => acc + item.price_sold, 0)
-
-        const stats = {
-            total_invested: totalInvested,
-            total_profit: totalProfit,
-        }
-
-        return stats
+        return await this.soldItem.aggregate([
+            { $match:{} },
+            { $group: { _id: null, total_invested: { $sum: "$price_bought" }, total_profit: { $sum: "$profit" }}}])
     }
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { getItemURL,getFetchOptions, isSaved, getItems, parseItemName } from '../other/scraper'
 import { getDate, sleepMs } from '../other/general'
-import { ReplaySubject } from 'rxjs'
+import { Observable, ReplaySubject } from 'rxjs'
 import { Cron } from '@nestjs/schedule'
 import fetch from 'node-fetch'
 import { QueueService } from 'src/queue/queue.service'
@@ -18,16 +18,16 @@ const os = require('os')
 
 @Injectable()
 export class ScraperService {
+    newData: Observable<any>
     options: Options
     stickersCache: Array<CachedSticker>
-    itemsSubject: ReplaySubject<ObservableItem>
     numberOfItemsSaved: number
     scrapingTimesArray: Array<number>
     errors: Error
     numberOfPages: number
-    serverStats: ServerStatistics
     
     constructor(@InjectModel("Item") private readonly itemModel: Model<Item>){
+        this.newData = new Observable()
         this.options = {
             min_memory: 8, // Remaining memory percentage, at which all items get cleared
             sleep_ms: 0, // Timeout after each scraped page
@@ -39,7 +39,6 @@ export class ScraperService {
             too_many_reqests: 0,
         }
         this.stickersCache = []
-        this.itemsSubject = new ReplaySubject<ObservableItem>()
         this.numberOfItemsSaved = 0
         this.scrapingTimesArray = []
         this.numberOfPages = 0
@@ -104,7 +103,6 @@ export class ScraperService {
 
         editedItems.forEach(async (item) => {
             await this.saveToDB(item)
-            this.appendItem(item)
         })
 
         const end = performance.now()
@@ -131,7 +129,7 @@ export class ScraperService {
         await Promise.all(proxies.map((proxy, i) => this.scrapeArrayOfItemCodes(multipleQueues[i], proxy)))
     }
 
-    //@Cron("0 0 * * *")
+    @Cron("0 0 * * *")
     async fetchStickersCache(){
         const stickersCacheURL = process.env.STICKERS_CACHE_URL
         this.stickersCache = await fetch(stickersCacheURL, {method: 'GET'})
@@ -143,12 +141,6 @@ export class ScraperService {
         console.log("\nFetched latest stickers!")
     }
 
-    async appendItem(item: Item) {
-        if(!isSaved(this.itemsSubject, item.id)){
-            this.itemsSubject.next({ data: item })
-        }
-    }
-
     async saveToDB(item: Item){
         const itemModel = new this.itemModel(item)
         try{
@@ -156,6 +148,7 @@ export class ScraperService {
         }catch{
             return
         }
+        this.newData.subscribe
     }
 
     updateOptions(newOptions: Options){
@@ -163,10 +156,7 @@ export class ScraperService {
     }
     
     clearItems() { // Clear all items from the Subject, all logs, and all errors
-        this.itemsSubject.complete()
-        this.itemsSubject = new ReplaySubject<ObservableItem>()
         this.numberOfItemsSaved = 0
-        this.serverStats
         this.scrapingTimesArray = []
         this.errors = {
             total_errors: 0,
@@ -179,14 +169,13 @@ export class ScraperService {
         console.log(`\nItems and Logs have been cleared!`)
     }
     
-    @Cron("0 * * * *")
+    @Cron("0 0 * * *")
     async clearDbCollection(){
         await this.itemModel.deleteMany({})
         console.log("\nItems have been removed from the database!")
     }
 
-    @Cron("*/1 * * * * *")
-    async getserverStats(){
+    async getServerStats(){
         // Get the free memory of the system
         const freeMemory = Math.round(os.freemem() / 1024 / 1024) 
         
@@ -226,6 +215,6 @@ export class ScraperService {
             options: this.options
         }
 
-        this.serverStats = serverStats
+        return serverStats
     }
 }
