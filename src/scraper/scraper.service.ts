@@ -18,16 +18,16 @@ const os = require('os')
 
 @Injectable()
 export class ScraperService {
-    newData: Observable<any>
     options: Options
     stickersCache: Array<CachedSticker>
     numberOfItemsSaved: number
     scrapingTimesArray: Array<number>
     errors: Error
     numberOfPages: number
+    itemsSubject: ReplaySubject<ObservableItem>
     
     constructor(@InjectModel("Item") private readonly itemModel: Model<Item>){
-        this.newData = new Observable()
+        this.itemsSubject = new ReplaySubject()
         this.options = {
             min_memory: 8, // Remaining memory percentage, at which all items get cleared
             sleep_ms: 0, // Timeout after each scraped page
@@ -103,6 +103,7 @@ export class ScraperService {
 
         editedItems.forEach(async (item) => {
             await this.saveToDB(item)
+            // this.saveToSubject(item)
         })
 
         const end = performance.now()
@@ -148,7 +149,14 @@ export class ScraperService {
         }catch{
             return
         }
-        this.newData.subscribe
+    }
+
+    saveToSubject(item: Item){
+        this.itemsSubject.next(
+            {
+                data: item
+            }
+        )
     }
 
     updateOptions(newOptions: Options){

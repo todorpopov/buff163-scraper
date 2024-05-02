@@ -11,7 +11,7 @@ import { Filters } from 'src/types/filters';
 @Controller('scraper')
 export class ScraperController implements OnModuleInit {
     async onModuleInit() {
-        // this.startQueue()
+        this.startQueue()
     }
 
     stopScraping: boolean // A variable to manage the scraping process through endpoints
@@ -19,36 +19,16 @@ export class ScraperController implements OnModuleInit {
         this.stopScraping = false
     }
 
-    // @ApiOperation({ summary: 'An observable SSE stream for storing the scraped items' })
-    // @UseGuards(AuthGuard)
-    // @Sse("stream/filter=:filter")
-    // getDataSse(@Param('filter') stickerFilter: string){ 
-    //     if(!stickerFilter.match("[1-9][0-9]*")){
-    //         return this.scraperService.itemsSubject
-    //     }else {
-    //         return this.scraperService.itemsSubject
-    //         .pipe((filter(item => minStickerPriceFilter(item.data, Number(stickerFilter)))))
-    //     }
-    // }
-
-    // @ApiOperation({ summary: 'Clone of the SSE endpoint but with the filters as query params' })
-    // @UseGuards(AuthGuard)
-    // @Sse("stream")
-    // dataStream(@Query() filters: Filters){
-    //     return this.scraperService.itemsSubject
-    //     .pipe(filter(item => filters.min_sticker_percentage ? minStickerPriceFilter(item.data, filters.min_sticker_percentage) : true))
-    //     .pipe(filter(item => filters.max_sticker_percentage ? maxStickerPriceFilter(item.data, filters.max_sticker_percentage) : true))
-    //     .pipe(filter(item => filters.min_price ? minItemPriceFilter(item.data, filters.min_price) : true))
-    //     .pipe(filter(item => filters.max_price ? maxItemPriceFilter(item.data, filters.max_price) : true))
-    //     .pipe(filter(item => filters.ref_price_percentage ? priceToRefPriceFilter(item.data, filters.ref_price_percentage) : true))
-    // }
-
+    @ApiOperation({ summary: 'SSE endpoint with filters as query params' })
+    @UseGuards(AuthGuard)
     @Sse("stream")
-    getItemData(){
-        const itemSubject = new ReplaySubject()
-
-
-        return itemSubject
+    dataStream(@Query() filters: Filters){
+        return this.scraperService.itemsSubject
+        .pipe(filter(item => filters.min_sticker_percentage ? minStickerPriceFilter(item.data, filters.min_sticker_percentage) : true))
+        .pipe(filter(item => filters.max_sticker_percentage ? maxStickerPriceFilter(item.data, filters.max_sticker_percentage) : true))
+        .pipe(filter(item => filters.min_price ? minItemPriceFilter(item.data, filters.min_price) : true))
+        .pipe(filter(item => filters.max_price ? maxItemPriceFilter(item.data, filters.max_price) : true))
+        .pipe(filter(item => filters.ref_price_percentage ? priceToRefPriceFilter(item.data, filters.ref_price_percentage) : true))
     }
 
     @ApiOperation({ summary: "Starts an infinite scraping process!" })
